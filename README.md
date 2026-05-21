@@ -304,16 +304,22 @@ This last step calls the AI and takes 1-3 minutes. When it finishes, go back to 
 
 ---
 
-## Every day after that
+## Running the pipeline manually
 
-The system runs automatically on a daily schedule. You do not need to do anything.
-
-If you want to force a fresh run manually, run these two commands:
+The scheduler is off by default. To refresh your feed, run these two commands:
 
 ```bash
 curl -X POST http://localhost:8000/api/clusters/run
 curl -X POST http://localhost:8000/api/cards/run
 ```
+
+To enable automatic daily runs, add this to `backend/.env`:
+
+```
+SCHEDULER_ENABLED=true
+```
+
+Then restart the backend. The pipeline will run every day at 08:00 UTC.
 
 ---
 

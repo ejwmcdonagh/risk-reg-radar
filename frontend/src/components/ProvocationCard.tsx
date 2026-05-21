@@ -97,7 +97,7 @@ export default function ProvocationCardComponent({
             : "border-zinc-200 hover:border-zinc-400"
         }`}
       >
-        <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col gap-2 flex-1 min-h-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
               <ScoreBadge score={card.score} />
@@ -113,16 +113,19 @@ export default function ProvocationCardComponent({
               })}
             </span>
           </div>
-          <p className="text-sm font-semibold leading-snug text-zinc-900 line-clamp-3">
-            {simpleMode
-              ? (card.simple_headline ?? card.board_talking_point.split(/(?<=[.!?])\s+/)[0])
-              : card.signal_headline}
-          </p>
-          <p className="text-xs text-zinc-500 line-clamp-1">
-            {simpleMode
-              ? card.board_talking_point.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
-              : card.metadata.cluster_summary}
-          </p>
+          {/* overflow-hidden only on the text block so the score tooltip is never clipped */}
+          <div className="flex flex-col gap-2 overflow-hidden">
+            <p className="text-sm font-semibold leading-snug text-zinc-900 line-clamp-3">
+              {simpleMode
+                ? (card.simple_headline ?? card.board_talking_point.split(/(?<=[.!?])\s+/)[0])
+                : card.signal_headline}
+            </p>
+            <p className="text-xs text-zinc-500 line-clamp-1">
+              {simpleMode
+                ? card.board_talking_point.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
+                : card.metadata.cluster_summary}
+            </p>
+          </div>
         </div>
         <div className="flex flex-col gap-1 mt-2">
           {secondaryDomains.length > 0 && (

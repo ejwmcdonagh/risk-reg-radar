@@ -28,12 +28,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = create_scheduler()
-    scheduler.start()
-    logger.info("Scheduler started with %d jobs", len(scheduler.get_jobs()))
+    if settings.scheduler_enabled:
+        scheduler = create_scheduler()
+        scheduler.start()
+        logger.info("Scheduler started with %d jobs", len(scheduler.get_jobs()))
+    else:
+        scheduler = None
+        logger.info("Scheduler disabled - set SCHEDULER_ENABLED=true to enable daily runs")
     yield
-    scheduler.shutdown(wait=False)
-    logger.info("Scheduler stopped")
+    if scheduler:
+        scheduler.shutdown(wait=False)
+        logger.info("Scheduler stopped")
 
 
 app = FastAPI(
