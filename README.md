@@ -5,6 +5,7 @@ Live signals. Real risk. Board-ready.
 Pulse watches cybersecurity threat data from sixteen live sources, groups related signals together, scores them by real-world risk, and writes intelligence cards a CISO can take straight into a board meeting.
 
 It is not a compliance tracker. It is a risk intelligence feed that tells you what is happening right now, how serious it is, and what to say about it.
+<img width="1440" height="813" alt="image" src="https://github.com/user-attachments/assets/bdc11fe6-e544-4705-ace7-555e34e317b4" />
 
 ---
 
