@@ -110,3 +110,18 @@ CrowdStrikeIngester = ResearchFeedIngester(
     source=SignalSource.CROWDSTRIKE,
     feed_url="https://www.crowdstrike.com/en-us/blog/feed",
 )
+
+MicrosoftSecurityIngester = ResearchFeedIngester(
+    source=SignalSource.MICROSOFT_SECURITY,
+    feed_url="https://www.microsoft.com/en-us/security/blog/feed/",
+)
+
+CofenseIngester = ResearchFeedIngester(
+    source=SignalSource.COFENSE,
+    feed_url="https://cofense.com/feed/",
+)
+
+KrebsIngester = ResearchFeedIngester(
+    source=SignalSource.KREBS,
+    feed_url="https://krebsonsecurity.com/feed/",
+)

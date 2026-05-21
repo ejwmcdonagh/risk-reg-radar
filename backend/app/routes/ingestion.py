@@ -19,10 +19,13 @@ from app.ingestion.ico_enforcement import IcoEnforcementIngester
 from app.ingestion.ncsc import NcscIngester
 from app.ingestion.nvd import NvdIngester
 from app.ingestion.research_feeds import (
+    CofenseIngester,
     CrowdStrikeIngester,
     DarkReadingIngester,
     GoogleThreatIntelIngester,
     Horizon3Ingester,
+    KrebsIngester,
+    MicrosoftSecurityIngester,
     RecordedFutureIngester,
 )
 from app.models.enums import SignalSource
@@ -45,6 +48,9 @@ _INGESTERS = {
     SignalSource.HORIZON3:            Horizon3Ingester,
     SignalSource.DARK_READING:        DarkReadingIngester,
     SignalSource.CROWDSTRIKE:         CrowdStrikeIngester,
+    SignalSource.MICROSOFT_SECURITY:  MicrosoftSecurityIngester,
+    SignalSource.COFENSE:             CofenseIngester,
+    SignalSource.KREBS:               KrebsIngester,
 }
 
 

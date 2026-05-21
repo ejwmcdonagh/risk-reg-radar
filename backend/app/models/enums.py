@@ -17,6 +17,10 @@ class SignalSource(str, Enum):
     HORIZON3 = "horizon3"
     DARK_READING = "dark_reading"
     CROWDSTRIKE = "crowdstrike"
+    # Phishing, social engineering, and fraud sources
+    MICROSOFT_SECURITY = "microsoft_security"
+    COFENSE = "cofense"
+    KREBS = "krebs"
     # Dynamic value used for all custom RSS sources added via the profile API.
     # The actual source name is stored in signal.tags as "source:<name>".
     CUSTOM = "custom"

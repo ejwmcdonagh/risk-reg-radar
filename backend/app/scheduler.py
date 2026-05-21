@@ -29,10 +29,13 @@ from app.ingestion.ico_enforcement import IcoEnforcementIngester
 from app.ingestion.ncsc import NcscIngester
 from app.ingestion.nvd import NvdIngester
 from app.ingestion.research_feeds import (
+    CofenseIngester,
     CrowdStrikeIngester,
     DarkReadingIngester,
     GoogleThreatIntelIngester,
     Horizon3Ingester,
+    KrebsIngester,
+    MicrosoftSecurityIngester,
     RecordedFutureIngester,
 )
 from app.services.card_generator import generate_cards
@@ -79,6 +82,9 @@ def create_scheduler() -> AsyncIOScheduler:
         (Horizon3Ingester,           "horizon3",            settings.cisa_kev_cron),
         (DarkReadingIngester,        "dark_reading",        settings.cisa_advisories_cron),
         (CrowdStrikeIngester,        "crowdstrike",         settings.cisa_kev_cron),
+        (MicrosoftSecurityIngester,  "microsoft_security",  settings.cisa_kev_cron),
+        (CofenseIngester,            "cofense",             settings.cisa_kev_cron),
+        (KrebsIngester,              "krebs",               settings.cisa_kev_cron),
     ]
 
     for ingester, source_id, cron in ingesters:

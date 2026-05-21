@@ -23,6 +23,9 @@ BUILTIN_SOURCES = [
     {"id": "horizon3",            "name": "Horizon3.ai",                    "description": "Adversarial attack path research and exploit analysis"},
     {"id": "dark_reading",        "name": "Dark Reading",                   "description": "Cybersecurity news and threat research"},
     {"id": "crowdstrike",         "name": "CrowdStrike",                    "description": "Adversary intelligence and threat research from CrowdStrike"},
+    {"id": "microsoft_security",  "name": "Microsoft Security",             "description": "Phishing campaigns, BEC, and credential threats tracked by Microsoft"},
+    {"id": "cofense",             "name": "Cofense",                        "description": "Phishing intelligence and email threat analysis"},
+    {"id": "krebs",               "name": "Krebs on Security",              "description": "In-depth reporting on fraud, social engineering, and cybercrime"},
 ]
 
 

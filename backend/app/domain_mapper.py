@@ -31,6 +31,9 @@ _DOMAIN_KEYWORDS: list[tuple[RiskDomain, frozenset[str]]] = [
             "privilege", "identity", "session", "token", "ldap", "kerberos",
             "password", "phishing", "account takeover", "aitm",
             "adversary-in-the-middle", "passkey", "fido",
+            "social engineering", "business email compromise", "bec",
+            "spear phishing", "smishing", "vishing", "impersonation",
+            "pretexting", "deepfake", "fraud", "wire transfer", "invoice fraud",
         ]),
     ),
     (
