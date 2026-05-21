@@ -17,8 +17,10 @@ class Settings(BaseSettings):
     # Anthropic API key — required for signal clustering (Step 2) and card generation (Step 3)
     anthropic_api_key: str = ""
 
-    # How many days of signals to look back when building clusters
-    clustering_window_days: int = 7
+    # How many days of signals to look back when building clusters.
+    # 30 days matches the NVD ingestion window and captures enough CISA KEV
+    # entries to find cross-source convergence patterns.
+    clustering_window_days: int = 30
     # Cron for running the clustering job (default: daily at 08:00 UTC, after ingestion)
     clustering_cron: str = "0 8 * * *"
 

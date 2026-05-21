@@ -13,6 +13,8 @@ can later be cross-referenced against NVD for CVSS scores, giving us a combined
 "actively exploited + high severity" signal which is a strong card trigger.
 """
 
+from datetime import date, datetime, timezone
+
 from app.domain_mapper import map_domains
 from app.http import async_client
 from app.ingestion.base import BaseIngester
@@ -21,6 +23,16 @@ from app.models.signal import Signal
 from app.severity_mapper import infer_severity
 
 FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+
+
+def _parse_date(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        # KEV dateAdded is YYYY-MM-DD with no time component
+        return datetime.combine(date.fromisoformat(value), datetime.min.time(), tzinfo=timezone.utc)
+    except ValueError:
+        return None
 
 
 class CisaKevIngester(BaseIngester):
@@ -51,6 +63,7 @@ class CisaKevIngester(BaseIngester):
             signal_type=SignalType.VULNERABILITY,
             title=title,
             summary=summary,
+            published_at=_parse_date(entry.get("dateAdded")),
             severity=infer_severity(title, summary),
             risk_domains=map_domains(title, summary, tags),
             tags=tags,

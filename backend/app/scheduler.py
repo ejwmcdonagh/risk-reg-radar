@@ -19,6 +19,7 @@ from app.ingestion.cisa_advisories import CisaAdvisoriesIngester
 from app.ingestion.cisa_kev import CisaKevIngester
 from app.ingestion.ncsc import NcscIngester
 from app.ingestion.nvd import NvdIngester
+from app.ingestion.custom_rss import run_custom_ingestion
 from app.services.card_generator import generate_cards
 from app.services.clustering import run_clustering
 
@@ -70,5 +71,15 @@ def create_scheduler() -> AsyncIOScheduler:
         max_instances=1,
     )
     logger.info("Scheduled card generation job: cron=%s", settings.card_generation_cron)
+
+    # Custom sources run on the same daily cadence as CISA KEV
+    scheduler.add_job(
+        run_custom_ingestion,
+        trigger=CronTrigger.from_crontab(settings.cisa_kev_cron),
+        id="ingest_custom",
+        name="Ingest custom RSS sources",
+        coalesce=True,
+        max_instances=1,
+    )
 
     return scheduler

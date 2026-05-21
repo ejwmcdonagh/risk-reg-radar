@@ -6,6 +6,9 @@ class SignalSource(str, Enum):
     CISA_ADVISORY = "cisa_advisory"
     NCSC = "ncsc"
     NVD = "nvd"
+    # Dynamic value used for all custom RSS sources added via the profile API.
+    # The actual source name is stored in signal.tags as "source:<name>".
+    CUSTOM = "custom"
 
 
 class SignalType(str, Enum):

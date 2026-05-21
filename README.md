@@ -1,110 +1,99 @@
 # Regulatory Radar
 
-A weekly intelligence agent for CISOs. Monitors real-world threat signals, regulatory updates, and vulnerability data, then surfaces multi-signal provocations in board-ready language that connects genuine cyber risk to commercial consequence.
+Regulatory Radar watches cybersecurity news from trusted government sources, groups related threats together, and writes intelligence cards a CISO can take straight into a board meeting.
 
-**This is not a compliance tracker. It is a provocation engine backed by evidence.**
-
----
-
-## What it does
-
-Most regulatory tracking tools treat all compliance signals equally. Regulatory Radar doesn't.
-
-The agent watches for signal combinations. A breach report alone is noise. A breach report plus a carrier updating their insurance questionnaire plus a new NCSC advisory on the same vector is a provocation worth interrupting a CISO's week for.
-
-Output: **Provocation cards** - structured intelligence cards with 5 layers:
-1. Signal headline - what is happening right now
-2. Evidence stack - the signals that triggered this card, source attributed
-3. Compliance gap - where this falls through the audit landscape
-4. Contextual question - "is this true in your organisation?"
-5. Board talking point - one paragraph the CISO can use almost verbatim
+**It is not a compliance checklist. It is a threat intelligence feed that tells you what matters, why it matters, and what to say about it.**
 
 ---
 
-## Architecture
+## What problem does it solve?
 
-```
-regulatory-radar/
-├── backend/          # Python / FastAPI - signal ingestion + API
-├── frontend/         # Next.js (App Router) - dashboard UI
-└── supabase/         # Postgres migrations
-    └── migrations/
-```
+Security teams are buried in alerts. Most tools just list them. Regulatory Radar reads them, groups the ones that are connected, scores how urgent each group is, and writes a plain-English card for each one.
 
-Signal flow:
+Each card has five parts:
 
-```
-External sources -> Ingesters -> signals table -> (future) combination detector -> provocation cards
-```
+1. **What is happening** - one sentence, present tense
+2. **The evidence** - which sources triggered this card and why
+3. **The compliance gap** - which regulation or audit standard this exposes
+4. **A question for your team** - something you can ask in a meeting tomorrow
+5. **Board talking point** - three sentences a non-technical director can understand
 
 ---
 
-## Tech stack
+## How it works
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python 3.11+, FastAPI, APScheduler |
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
-| Database | Postgres (default: Supabase, see Alternative databases below) |
-| HTTP client | httpx (async) |
-| Feed parsing | feedparser |
+Every day the system:
+
+1. Pulls threat data from four public sources (CISA, NVD, NCSC)
+2. Groups signals that point at the same underlying threat
+3. Scores each group by severity, recency, and how many sources agree
+4. Writes a card for every group above the score threshold
+
+You can also add your own RSS feeds and tell it which technologies your organisation uses. Cards that mention your tech stack float to the top.
 
 ---
 
-## Signal sources (V1)
+## What you need before you start
 
-| Source | Type | Cadence |
-|--------|------|---------|
-| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Known Exploited Vulnerabilities catalog | Daily |
-| [CISA Advisories](https://www.cisa.gov/cybersecurity-advisories) | Threat advisories (RSS) | Every 6h |
-| [NCSC Alerts](https://www.ncsc.gov.uk/section/keep-up-to-date/alerts-advisories) | UK threat alerts (RSS) | Every 6h |
-| [NVD CVEs](https://nvd.nist.gov/) | CRITICAL CVEs published in last 30 days | Daily |
+You need four things installed on your computer:
+
+- **Python 3.11 or newer** - check by running `python3 --version`
+- **Node.js 20 or newer** - check by running `node --version`
+- **Docker Desktop** - download from [docker.com](https://www.docker.com/products/docker-desktop)
+- **Supabase CLI** - install with `brew install supabase/tap/supabase` on Mac
+- **An Anthropic API key** - get one free at [console.anthropic.com](https://console.anthropic.com/keys)
 
 ---
 
 ## Getting started
 
-### Prerequisites
-
-- Python 3.11+
-- Node.js 20+
-- A Supabase project (free tier works) or see Alternative databases below
-
-### 1. Clone and configure
+### Step 1 - Get the code
 
 ```bash
 git clone https://github.com/ejwmcdonagh/reg-radar.git
 cd reg-radar
 ```
 
-Copy and fill in environment variables:
+### Step 2 - Create your config file
 
 ```bash
 cp backend/.env.example backend/.env
 ```
 
-Required values in `backend/.env`:
+Open `backend/.env` in any text editor and fill in your Anthropic API key:
 
 ```
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-Find these in your Supabase project under Settings > API.
+Leave everything else as it is for now.
 
-### 2. Run the database migration
+### Step 3 - Start the database
 
-Option A - Supabase CLI:
+Open Docker Desktop first (just launch the app, you don't need to do anything in it).
+
+Then in your terminal:
+
 ```bash
-supabase db push
+supabase start --exclude edge-runtime
 ```
 
-Option B - paste directly into the Supabase SQL editor:
+This starts a local Postgres database. When it finishes you will see a URL and a key. Copy them into `backend/.env`:
+
+```
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_ROLE_KEY=the-key-shown-in-your-terminal
+```
+
+### Step 4 - Run the database setup
+
 ```bash
-cat supabase/migrations/001_signals.sql
+supabase migration up --local
 ```
 
-### 3. Start the backend
+This creates the tables the app needs. You only need to do this once.
+
+### Step 5 - Start the backend
 
 ```bash
 cd backend
@@ -114,9 +103,11 @@ pip install -e .
 uvicorn app.main:app --reload
 ```
 
-API runs at `http://localhost:8000`. Docs at `http://localhost:8000/docs`.
+Leave this terminal running. The API is now available at `http://localhost:8000`.
 
-### 4. Start the frontend
+### Step 6 - Start the frontend
+
+Open a second terminal window:
 
 ```bash
 cd frontend
@@ -124,132 +115,117 @@ npm install
 npm run dev
 ```
 
-Dashboard runs at `http://localhost:3000`.
+Leave this running too. The dashboard is now at `http://localhost:3000`.
 
----
+### Step 7 - Load your first data
 
-## API reference
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/signals` | List signals. Query params: `source`, `risk_domain`, `limit`, `offset` |
-| `GET` | `/api/signals/stats` | Signal counts by source and domain |
-| `GET` | `/api/signals/{id}` | Single signal |
-| `POST` | `/api/ingest/run?source={source}` | Trigger a manual ingestion run |
-| `GET` | `/api/ingest/status` | Recent ingestion run history |
-| `POST` | `/api/clusters/run` | Trigger signal clustering |
-| `GET` | `/api/clusters` | List clusters. Query params: `risk_domain`, `status`, `min_score`, `limit`, `offset` |
-| `GET` | `/api/clusters/{id}` | Single cluster |
-| `POST` | `/api/cards/run` | Trigger provocation card generation |
-| `GET` | `/api/cards` | List cards. Query params: `risk_domain`, `status`, `min_score`, `limit`, `offset` |
-| `GET` | `/api/cards/{id}` | Single card with all 5 layers |
-| `GET` | `/health` | Health check |
-
-Valid `source` values: `cisa_kev`, `cisa_advisory`, `ncsc`, `nvd`
-
-Valid `risk_domain` values: `identity_credential`, `vulnerability_patch`, `supply_chain`, `detection_response`, `data_exposure`, `ransomware_extortion`
-
-### Manual pipeline run (development)
+Open a third terminal window:
 
 ```bash
-# Run the full pipeline: ingest all sources, cluster, generate cards
+cd backend
+source .venv/bin/activate
 curl -X POST "http://localhost:8000/api/ingest/run?source=cisa_kev"
 curl -X POST "http://localhost:8000/api/ingest/run?source=nvd"
-curl -X POST "http://localhost:8000/api/clusters/run"
-curl -X POST "http://localhost:8000/api/cards/run"
+curl -X POST "http://localhost:8000/api/ingest/run?source=cisa_advisory"
+curl -X POST "http://localhost:8000/api/ingest/run?source=ncsc"
+```
 
-# List the top cards
-curl "http://localhost:8000/api/cards" | python3 -m json.tool
+Then generate the intelligence cards:
+
+```bash
+curl -X POST http://localhost:8000/api/clusters/run
+curl -X POST http://localhost:8000/api/cards/run
+```
+
+The second command calls the AI and takes 1-3 minutes. When it finishes, refresh `http://localhost:3000` and you will see cards in all six lanes.
+
+---
+
+## Every day after that
+
+The system runs automatically on a schedule. You do not need to do anything. If you want to force a fresh run:
+
+```bash
+curl -X POST http://localhost:8000/api/clusters/run
+curl -X POST http://localhost:8000/api/cards/run
 ```
 
 ---
 
-## Alternative databases
+## Customising your feed
 
-The backend uses supabase-py, which talks to Postgres via the [PostgREST](https://postgrest.org/) protocol. You can swap Supabase for any Postgres host by running PostgREST yourself:
+Go to `http://localhost:3000` and click **Customize your feed** in the top right.
 
-1. Deploy PostgREST pointing at your Postgres instance
-2. Update `SUPABASE_URL` to your PostgREST endpoint
-3. Update `SUPABASE_SERVICE_ROLE_KEY` to your PostgREST JWT secret
+**Technology stack** - add the vendors and products your organisation uses (e.g. Palo Alto, Microsoft Exchange, Cisco). Cards that mention these will be highlighted and sorted to the top of each lane.
 
-The SQL in `supabase/migrations/` is standard Postgres with no Supabase-specific extensions required.
+**Custom sources** - add any RSS or Atom feed URL. The system will ingest it daily alongside the built-in sources.
 
 ---
 
-## Risk domains
+## Switching AI models
 
-Signals are tagged to one or more domains based on content:
+The system uses Claude Haiku by default. This costs about $0.10 per full pipeline run and is good enough for testing.
 
-| Domain | What it covers |
-|--------|---------------|
-| `identity_credential` | Compromised accounts, phishable auth, privilege abuse, NHI sprawl |
-| `vulnerability_patch` | Unpatched CVEs, exploit-in-the-wild timing gaps, EOL software |
-| `supply_chain` | Vendor compromise, software dependency attacks, third-party access |
-| `detection_response` | Dwell time, alert fatigue, logging coverage gaps |
-| `data_exposure` | Misconfigured storage, excessive access, exfiltration vectors |
-| `ransomware_extortion` | Cross-domain worst-case lens that maps to board and insurer mental model |
+When you are ready for production, switch to Claude Opus for higher quality cards. To do this, open these two files and change the model name:
 
-Domain mapping logic lives in `backend/app/domain_mapper.py` and is keyword-based in V1. This will be replaced with LLM-assisted classification once there is sufficient signal volume to evaluate quality.
+- `backend/app/services/clustering.py` - look for `model="claude-haiku-4-5-20251001"`
+- `backend/app/services/card_generator.py` - look for `model="claude-haiku-4-5-20251001"`
 
----
-
-## Build sequence
-
-- [x] **Step 1** - Signal ingestion layer
-- [x] **Step 2** - Signal combination detection logic
-- [x] **Step 3** - Provocation card generator (prompt engineering)
-- [ ] **Step 4** - Dashboard shell (domain swim-lane layout)
-- [ ] **Step 5** - MCP integration (SIEM + ticketing aggregation)
-- [ ] **Step 6** - Email digest renderer
-- [ ] **Step 7** - Onboarding flow
-
----
-
-## LLM model configuration
-
-Two pipeline steps call the Anthropic API: clustering (`backend/app/services/clustering.py`) and card generation (`backend/app/services/card_generator.py`). Both default to `claude-haiku-4-5-20251001` for cost-efficient testing.
-
-### Switching models
-
-**To use Haiku (testing, low cost):**
-
-Both files are already configured for Haiku. No changes needed.
-
-**To use Opus (production quality):**
-
-In `clustering.py` around line 168 and `card_generator.py` around line 127, change:
+Change both to:
 
 ```python
-# Haiku (current default)
-model="claude-haiku-4-5-20251001",
-max_tokens=4096,
-```
-
-to:
-
-```python
-# Opus — add thinking for better cluster quality
 model="claude-opus-4-7",
-max_tokens=4096,
 thinking={"type": "adaptive"},
 ```
 
-Note: `thinking` is not supported on Haiku. Remove it when switching back.
-
-### Approximate costs per pipeline run
-
-| Model | Clustering (~15k input tokens) | Card generation (~2k tokens x 10 cards) |
-|-------|-------------------------------|----------------------------------------|
-| Haiku | ~$0.015 | ~$0.02 |
-| Opus | ~$0.075 | ~$0.10 |
-
-Costs are estimates based on a 1,000 signal corpus. Token usage per run is logged in `metadata.usage` on each cluster and card row.
+Opus costs about $0.50 per full run. Token usage is logged on every card so you can track costs.
 
 ---
 
-## Contributing
+## Troubleshooting
 
-Pull requests welcome. For significant changes, open an issue first to discuss the approach.
+**"command not found: python"** - use `python3` instead of `python` on Mac.
+
+**SSL certificate errors** - this usually happens on corporate laptops. The app uses `truststore` to read your system certificates automatically. If you still see errors, ask your IT team which certificate file your network uses.
+
+**Docker not running** - open Docker Desktop before running `supabase start`.
+
+**Port already in use** - something else is using port 8000 or 3000. Find and stop the other process, or restart your terminal.
+
+**Cards not appearing** - make sure you ran both `clusters/run` and `cards/run`. Clusters must exist before cards can be generated.
+
+---
+
+## Project structure
+
+```
+reg-radar/
+├── backend/                  # Python API and pipeline
+│   ├── app/
+│   │   ├── ingestion/        # One file per data source
+│   │   ├── services/         # Clustering and card generation (AI logic)
+│   │   ├── routes/           # API endpoints
+│   │   └── ...
+│   └── scripts/              # One-off maintenance scripts
+├── frontend/                 # Next.js dashboard
+│   └── src/
+│       ├── app/              # Pages (dashboard, settings)
+│       └── components/       # UI components
+└── supabase/
+    └── migrations/           # Database setup scripts
+```
+
+---
+
+## What is built so far
+
+- [x] Step 1 - Pull threat data from CISA, NVD, NCSC
+- [x] Step 2 - Group related signals into clusters
+- [x] Step 3 - Generate 5-layer intelligence cards using AI
+- [x] Step 4 - Dashboard with six domain lanes, card modal, tech stack highlighting
+- [ ] Step 5 - Connect to your SIEM or ticketing system
+- [ ] Step 6 - Weekly email digest
+- [ ] Step 7 - Onboarding flow for new organisations
 
 ---
 

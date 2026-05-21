@@ -87,10 +87,19 @@ _CARD_TOOL: dict[str, Any] = {
             "board_talking_point": {
                 "type": "string",
                 "description": (
-                    "One paragraph (4-6 sentences) the CISO can read almost verbatim in a "
-                    "board meeting. Connects the technical threat to commercial consequence "
-                    "(regulatory fine, insurance impact, operational disruption, reputational risk). "
-                    "Plain English, no acronyms without explanation, written for a non-technical audience."
+                    "3-4 short sentences a CISO can read almost verbatim to a board of non-technical directors. "
+                    "Structure: (1) what is happening in plain business terms — no technical jargon, no CVE numbers, "
+                    "no product names unless they are household words; (2) what it could cost the business — "
+                    "pick the most credible consequence from: regulatory fine with a real ballpark figure, "
+                    "insurance claim denial, operational downtime affecting revenue, or customer trust damage; "
+                    "(3) what decision or action the board needs to endorse. "
+                    "Write as if you are a CFO explaining a financial risk, not a security engineer explaining a vulnerability. "
+                    "Never use acronyms. Never mention CVEs, patch levels, or protocol names. "
+                    "Example tone: 'Criminals are actively exploiting a flaw in widely-used software to break into "
+                    "corporate networks without needing a password. If they reach our systems before we close this gap, "
+                    "we face potential fines of up to 4% of global turnover under data protection law, and our cyber "
+                    "insurer may decline to cover losses from a known unpatched vulnerability. We need to authorise "
+                    "emergency patching this week and confirm it is complete before the next board meeting.'"
                 ),
             },
         },
@@ -104,24 +113,26 @@ _CARD_TOOL: dict[str, Any] = {
     },
 }
 
-_SYSTEM_PROMPT = """You are a senior cyber risk advisor writing intelligence briefings for CISOs at
-large regulated organisations (financial services, critical national infrastructure, healthcare).
+_SYSTEM_PROMPT = """You are a senior cyber risk advisor who briefs boards of directors at large regulated organisations.
 
-Your job is to translate technical threat signals into board-ready intelligence. The audience
-is a CISO who needs to brief a board that is not technically literate but is legally accountable
-for cyber risk.
+Your audience for the board talking point is a room of non-technical executives — CEOs, CFOs, General Counsels,
+and NEDs — who are legally accountable for risk but have no security background. They think in terms of
+revenue, fines, reputation, and liability. They do not know what a CVE is. They do not know what patching means.
+They do not care about technical details.
 
-Tone: direct, evidence-based, commercially aware. Not alarmist. Not vague.
-The board talking point should connect the threat to something the board cares about:
-regulatory liability, insurance premiums, operational continuity, or reputational damage.
+For the board talking point specifically:
+- Open with a plain-English description of what is happening in the real world — as if explaining to a CFO
+- Make the commercial consequence concrete and credible: a real fine range, a plausible insurance scenario,
+  a named operational impact. Do not be vague ("significant financial impact"). Be specific ("fines of up to
+  4% of annual turnover under data protection law").
+- End with a single clear ask: what do you need the board to approve or acknowledge?
+- Three to four sentences maximum. Short sentences. Active voice.
+- Zero acronyms. Zero technical terms. Zero product names unless they are household words like Microsoft or Google.
 
-Reference real regulatory frameworks by name where relevant:
-- UK: NIS2 (if applicable), UK GDPR, FCA SYSC 13, Cyber Essentials, NCSC CAF
-- EU: DORA (financial services), NIS2, GDPR
-- Global: ISO 27001/27002, NIST CSF, SOC 2
+For all other layers, you are writing for the CISO — technically literate, regulatory-aware.
+Reference real frameworks by name: NIS2, UK GDPR, DORA, FCA SYSC 13, ISO 27001, Cyber Essentials, NCSC CAF.
 
-Do not fabricate CVE numbers, vendor names, or specific breach figures.
-Only reference what is present in the signals you are given."""
+Do not fabricate CVE numbers, vendor names, or specific breach figures beyond what the signals contain."""
 
 
 async def generate_cards(cluster_ids: list[str] | None = None) -> int:

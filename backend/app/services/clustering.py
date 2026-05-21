@@ -120,11 +120,16 @@ technique, the same threat actor campaign, the same vendor being targeted across
 advisories.
 
 Do not group signals just because they share a broad category like "ransomware" or
-"vulnerabilities". The threshold for a cluster is: would a CISO reading these signals
-together have reason to believe they represent a single developing story?
+"vulnerabilities". The threshold for a multi-signal cluster is: would a CISO reading these
+signals together have reason to believe they represent a single developing story?
 
-Minimum cluster size is 2 signals. A signal can only belong to one cluster. Unclustered
-signals (no genuine match) should not be grouped at all."""
+Single-signal clusters are allowed when a signal is significant enough to stand alone —
+for example: a confirmed ransomware campaign advisory, an NCSC alert with no related signals,
+or a critical actively-exploited CVE with no peer signals. Use single-signal clusters
+sparingly and only for genuinely high-importance signals.
+
+A signal can only belong to one cluster. Signals that are neither part of a convergence
+pattern nor significant enough to stand alone should not be clustered."""
 
 
 def _score(signals: list[dict[str, Any]], all_domains: list[str]) -> tuple[float, dict[str, Any]]:
@@ -328,14 +333,12 @@ async def run_clustering() -> int:
     written = 0
     for cluster_def in clusters_data:
         indices: list[int] = cluster_def.get("signal_indices", [])
-        if len(indices) < 2:
-            # The model was told minimum 2 — skip malformed entries rather than
-            # writing single-signal clusters that would pollute the provocation queue
+        if not indices:
             continue
 
         # Guard against out-of-range indices from the model
         valid_signals = [signals[i] for i in indices if i < len(signals)]
-        if len(valid_signals) < 2:
+        if not valid_signals:
             continue
 
         all_domains: list[str] = cluster_def.get("all_domains", [])

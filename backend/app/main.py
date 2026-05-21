@@ -19,7 +19,7 @@ truststore.inject_into_ssl()
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routes import cards, clusters, ingestion, signals
+from app.routes import cards, clusters, ingestion, profile, signals
 from app.scheduler import create_scheduler
 
 logging.basicConfig(level=settings.log_level)
@@ -56,6 +56,7 @@ app.include_router(signals.router)
 app.include_router(ingestion.router)
 app.include_router(clusters.router)
 app.include_router(cards.router)
+app.include_router(profile.router)
 
 
 @app.get("/health")
