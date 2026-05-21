@@ -32,6 +32,8 @@ Every day the system:
 3. Scores each group by severity, recency, source count, and active exploitation status (CISA KEV signals add a +20 bonus)
 4. Writes a card for every group above the score threshold
 
+**Important:** clustering only looks at signals from the last 30 days. Signals are stored permanently but anything older than the window is ignored until the window is extended. See [How the signal window works](#how-the-signal-window-works) for details.
+
 You can turn any source on or off, add your own RSS feeds, and tell it which technologies your organisation uses. Cards that mention your tech stack float to the top. You can filter the board by risk domain to see cross-lane cards that touch that domain, and by security team (IAM, SOC, AppSec, and others) to focus on what is relevant to a specific group. A simple mode toggle rewrites card content for non-technical board members.
 
 ### Built-in sources
