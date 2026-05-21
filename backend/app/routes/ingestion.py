@@ -18,6 +18,13 @@ from app.ingestion.github_advisory import GithubAdvisoryIngester
 from app.ingestion.ico_enforcement import IcoEnforcementIngester
 from app.ingestion.ncsc import NcscIngester
 from app.ingestion.nvd import NvdIngester
+from app.ingestion.research_feeds import (
+    CrowdStrikeIngester,
+    DarkReadingIngester,
+    GoogleThreatIntelIngester,
+    Horizon3Ingester,
+    RecordedFutureIngester,
+)
 from app.models.enums import SignalSource
 
 router = APIRouter(prefix="/api/ingest", tags=["ingestion"])
@@ -25,14 +32,19 @@ router = APIRouter(prefix="/api/ingest", tags=["ingestion"])
 # Registry maps source enum values to ingester instances.
 # Adding a new source requires only adding it here - the route handler is generic.
 _INGESTERS = {
-    SignalSource.CISA_KEV:          CisaKevIngester(),
-    SignalSource.CISA_ADVISORY:     CisaAdvisoriesIngester(),
-    SignalSource.NCSC:              NcscIngester(),
-    SignalSource.NVD:               NvdIngester(),
-    SignalSource.EXPLOIT_DB:        ExploitDbIngester(),
-    SignalSource.BLEEPING_COMPUTER: BleepingComputerIngester(),
-    SignalSource.ICO_ENFORCEMENT:   IcoEnforcementIngester(),
-    SignalSource.GITHUB_ADVISORY:   GithubAdvisoryIngester(),
+    SignalSource.CISA_KEV:            CisaKevIngester(),
+    SignalSource.CISA_ADVISORY:       CisaAdvisoriesIngester(),
+    SignalSource.NCSC:                NcscIngester(),
+    SignalSource.NVD:                 NvdIngester(),
+    SignalSource.EXPLOIT_DB:          ExploitDbIngester(),
+    SignalSource.BLEEPING_COMPUTER:   BleepingComputerIngester(),
+    SignalSource.ICO_ENFORCEMENT:     IcoEnforcementIngester(),
+    SignalSource.GITHUB_ADVISORY:     GithubAdvisoryIngester(),
+    SignalSource.RECORDED_FUTURE:     RecordedFutureIngester,
+    SignalSource.GOOGLE_THREAT_INTEL: GoogleThreatIntelIngester,
+    SignalSource.HORIZON3:            Horizon3Ingester,
+    SignalSource.DARK_READING:        DarkReadingIngester,
+    SignalSource.CROWDSTRIKE:         CrowdStrikeIngester,
 }
 
 

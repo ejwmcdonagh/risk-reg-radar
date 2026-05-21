@@ -286,6 +286,10 @@ async def _generate_one(db: Any, client: anthropic.Anthropic, cluster: dict[str,
                 "output_tokens": response.usage.output_tokens,
             },
             "cluster_summary": cluster["cluster_summary"],
+            "signal_count": cluster["signal_count"],
+            "source_count": cluster["source_count"],
+            "severity_max": cluster.get("severity_max"),
+            "all_domains": cluster.get("metadata", {}).get("all_domains", [cluster["risk_domain"]]),
         },
     }
 

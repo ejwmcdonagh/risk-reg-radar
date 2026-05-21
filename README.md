@@ -2,7 +2,7 @@
 
 Live signals. Real risk. Board-ready.
 
-Pulse watches cybersecurity threat data from eight live sources, groups related signals together, scores them by real-world risk, and writes intelligence cards a CISO can take straight into a board meeting.
+Pulse watches cybersecurity threat data from thirteen live sources, groups related signals together, scores them by real-world risk, and writes intelligence cards a CISO can take straight into a board meeting.
 
 It is not a compliance tracker. It is a risk intelligence feed that tells you what is happening right now, how serious it is, and what to say about it.
 
@@ -26,7 +26,7 @@ Each card has five parts:
 
 Every day the system:
 
-1. Pulls threat data from eight built-in sources (see list below)
+1. Pulls threat data from thirteen built-in sources (see list below)
 2. Groups signals that point at the same underlying threat
 3. Scores each group by severity, recency, and how many sources agree
 4. Writes a card for every group above the score threshold
@@ -35,16 +35,33 @@ You can turn any source on or off, add your own RSS feeds, and tell it which tec
 
 ### Built-in sources
 
+**Official feeds**
+
 | Source | What it covers |
 |--------|---------------|
 | CISA KEV | US government list of vulnerabilities being actively exploited right now |
 | CISA Advisories | US cybersecurity threat advisories |
 | NCSC | UK National Cyber Security Centre alerts |
 | NVD | Critical CVEs from the US National Vulnerability Database |
+| GitHub Security Advisories | Open source software vulnerability database |
+
+**Threat news**
+
+| Source | What it covers |
+|--------|---------------|
 | SANS Internet Storm Center | Daily threat analysis from security practitioners |
 | Bleeping Computer | Breaking cybersecurity news, often 24-48 hours ahead of official advisories |
 | FCA News | UK Financial Conduct Authority enforcement actions and regulatory guidance |
-| GitHub Security Advisories | Open source software vulnerability database |
+
+**Threat research blogs**
+
+| Source | What it covers |
+|--------|---------------|
+| Recorded Future | Threat intelligence analysis and adversary tracking |
+| Google Threat Intelligence | Research from Google and Mandiant threat teams |
+| Horizon3.ai | Adversarial attack path research and real-world exploit analysis |
+| Dark Reading | In-depth cybersecurity research and analysis |
+| CrowdStrike | Adversary intelligence and threat research |
 
 ---
 
@@ -256,6 +273,11 @@ curl -X POST "http://localhost:8000/api/ingest/run?source=exploit_db"
 curl -X POST "http://localhost:8000/api/ingest/run?source=bleeping_computer"
 curl -X POST "http://localhost:8000/api/ingest/run?source=ico_enforcement"
 curl -X POST "http://localhost:8000/api/ingest/run?source=github_advisory"
+curl -X POST "http://localhost:8000/api/ingest/run?source=recorded_future"
+curl -X POST "http://localhost:8000/api/ingest/run?source=google_threat_intel"
+curl -X POST "http://localhost:8000/api/ingest/run?source=horizon3"
+curl -X POST "http://localhost:8000/api/ingest/run?source=dark_reading"
+curl -X POST "http://localhost:8000/api/ingest/run?source=crowdstrike"
 ```
 
 The `cisa_kev` command will return around 900 signals. The others return 10-50 each. The `github_advisory` command can be slow if you have not set a `GITHUB_TOKEN` in your `.env` file.
@@ -295,7 +317,7 @@ Go to `http://localhost:3000` and click **Customize your feed** in the top right
 
 **Your technology stack** - add the vendors and products your organisation runs (for example: Palo Alto, Microsoft Exchange, Cisco). Cards that mention these will be highlighted and sorted to the top of each lane.
 
-**Signal sources** - all eight built-in sources are listed with an Active/Paused toggle. Pause any source you do not want. Changes take effect on the next scheduled run.
+**Signal sources** - all thirteen built-in sources are listed with an Active/Paused toggle. Pause any source you do not want. Changes take effect on the next scheduled run.
 
 **Add your own sources** - paste any RSS or Atom feed URL and give it a name. It will be ingested daily alongside the built-in sources.
 

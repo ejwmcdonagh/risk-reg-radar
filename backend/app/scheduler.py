@@ -28,6 +28,13 @@ from app.ingestion.github_advisory import GithubAdvisoryIngester
 from app.ingestion.ico_enforcement import IcoEnforcementIngester
 from app.ingestion.ncsc import NcscIngester
 from app.ingestion.nvd import NvdIngester
+from app.ingestion.research_feeds import (
+    CrowdStrikeIngester,
+    DarkReadingIngester,
+    GoogleThreatIntelIngester,
+    Horizon3Ingester,
+    RecordedFutureIngester,
+)
 from app.services.card_generator import generate_cards
 from app.services.clustering import run_clustering
 from app.ingestion.custom_rss import run_custom_ingestion
@@ -58,14 +65,20 @@ def create_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler(timezone="UTC")
 
     ingesters = [
-        (CisaKevIngester(),          "cisa_kev",          settings.cisa_kev_cron),
-        (CisaAdvisoriesIngester(),   "cisa_advisory",     settings.cisa_advisories_cron),
-        (NcscIngester(),             "ncsc",              settings.ncsc_cron),
-        (NvdIngester(),              "nvd",               settings.nvd_cron),
-        (ExploitDbIngester(),        "exploit_db",        settings.cisa_advisories_cron),
-        (BleepingComputerIngester(), "bleeping_computer", settings.cisa_advisories_cron),
-        (IcoEnforcementIngester(),   "ico_enforcement",   settings.cisa_kev_cron),
-        (GithubAdvisoryIngester(),   "github_advisory",   settings.nvd_cron),
+        (CisaKevIngester(),          "cisa_kev",            settings.cisa_kev_cron),
+        (CisaAdvisoriesIngester(),   "cisa_advisory",       settings.cisa_advisories_cron),
+        (NcscIngester(),             "ncsc",                settings.ncsc_cron),
+        (NvdIngester(),              "nvd",                 settings.nvd_cron),
+        (ExploitDbIngester(),        "exploit_db",          settings.cisa_advisories_cron),
+        (BleepingComputerIngester(), "bleeping_computer",   settings.cisa_advisories_cron),
+        (IcoEnforcementIngester(),   "ico_enforcement",     settings.cisa_kev_cron),
+        (GithubAdvisoryIngester(),   "github_advisory",     settings.nvd_cron),
+        # Research feeds run daily - high quality but lower cadence than news sources
+        (RecordedFutureIngester,     "recorded_future",     settings.cisa_kev_cron),
+        (GoogleThreatIntelIngester,  "google_threat_intel", settings.cisa_kev_cron),
+        (Horizon3Ingester,           "horizon3",            settings.cisa_kev_cron),
+        (DarkReadingIngester,        "dark_reading",        settings.cisa_advisories_cron),
+        (CrowdStrikeIngester,        "crowdstrike",         settings.cisa_kev_cron),
     ]
 
     for ingester, source_id, cron in ingesters:

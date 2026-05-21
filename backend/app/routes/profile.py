@@ -10,14 +10,19 @@ router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 # All built-in sources in display order
 BUILTIN_SOURCES = [
-    {"id": "cisa_kev",          "name": "CISA KEV",                    "description": "US known exploited vulnerabilities catalog"},
-    {"id": "cisa_advisory",     "name": "CISA Advisories",             "description": "US cybersecurity advisories (RSS)"},
-    {"id": "ncsc",              "name": "NCSC",                        "description": "UK National Cyber Security Centre alerts"},
-    {"id": "nvd",               "name": "NVD",                         "description": "National Vulnerability Database - critical CVEs"},
-    {"id": "exploit_db",        "name": "SANS Internet Storm Center",  "description": "Daily threat analysis and active exploitation reports"},
-    {"id": "bleeping_computer", "name": "Bleeping Computer",           "description": "Breaking cybersecurity news"},
-    {"id": "ico_enforcement",   "name": "FCA News",                    "description": "UK Financial Conduct Authority enforcement actions and regulatory guidance"},
-    {"id": "github_advisory",   "name": "GitHub Security Advisories",  "description": "Open source vulnerability advisories"},
+    {"id": "cisa_kev",            "name": "CISA KEV",                       "description": "US known exploited vulnerabilities catalog"},
+    {"id": "cisa_advisory",       "name": "CISA Advisories",                "description": "US cybersecurity advisories (RSS)"},
+    {"id": "ncsc",                "name": "NCSC",                           "description": "UK National Cyber Security Centre alerts"},
+    {"id": "nvd",                 "name": "NVD",                            "description": "National Vulnerability Database - critical CVEs"},
+    {"id": "exploit_db",          "name": "SANS Internet Storm Center",     "description": "Daily threat analysis and active exploitation reports"},
+    {"id": "bleeping_computer",   "name": "Bleeping Computer",              "description": "Breaking cybersecurity news"},
+    {"id": "ico_enforcement",     "name": "FCA News",                       "description": "UK Financial Conduct Authority enforcement actions and regulatory guidance"},
+    {"id": "github_advisory",     "name": "GitHub Security Advisories",     "description": "Open source vulnerability advisories"},
+    {"id": "recorded_future",     "name": "Recorded Future",                "description": "Threat intelligence research and analysis"},
+    {"id": "google_threat_intel", "name": "Google Threat Intelligence",     "description": "Threat research from Google and Mandiant"},
+    {"id": "horizon3",            "name": "Horizon3.ai",                    "description": "Adversarial attack path research and exploit analysis"},
+    {"id": "dark_reading",        "name": "Dark Reading",                   "description": "Cybersecurity news and threat research"},
+    {"id": "crowdstrike",         "name": "CrowdStrike",                    "description": "Adversary intelligence and threat research from CrowdStrike"},
 ]
 
 

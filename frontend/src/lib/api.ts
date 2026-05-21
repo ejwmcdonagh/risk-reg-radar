@@ -23,6 +23,10 @@ export type ProvocationCard = {
     model: string;
     usage: { input_tokens: number; output_tokens: number };
     cluster_summary: string;
+    signal_count?: number;
+    source_count?: number;
+    severity_max?: string | null;
+    all_domains?: string[];
   };
 };
 

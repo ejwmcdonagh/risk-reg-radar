@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ProvocationCard, EvidenceItem } from "@/lib/api";
 
 type Props = {
@@ -9,14 +9,17 @@ type Props = {
 };
 
 function ScoreBadge({ score }: { score: number }) {
-  const colour =
-    score >= 70 ? "bg-red-600 text-white"
-    : score >= 45 ? "bg-orange-500 text-white"
-    : "bg-zinc-400 text-white";
+  const { colour, label } =
+    score >= 70 ? { colour: "bg-red-600 text-white",    label: "Critical" }
+    : score >= 45 ? { colour: "bg-orange-500 text-white", label: "High" }
+    : { colour: "bg-zinc-400 text-white", label: "Medium" };
   return (
-    <span className={`inline-flex items-center rounded px-2.5 py-1 text-sm font-bold tabular-nums ${colour}`}>
-      {score}
-    </span>
+    <div className="inline-flex items-center gap-2">
+      <span className={`inline-flex items-center rounded px-2.5 py-1 text-sm font-bold tabular-nums ${colour}`}>
+        {score}
+      </span>
+      <span className="text-sm font-medium text-zinc-600">{label}</span>
+    </div>
   );
 }
 
@@ -42,6 +45,77 @@ function EvidenceRow({ item }: { item: EvidenceItem }) {
       </div>
       <p className="text-sm text-zinc-500 leading-relaxed pl-0">{item.point}</p>
     </li>
+  );
+}
+
+const EVIDENCE_PREVIEW = 2;
+
+function EvidenceSection({ items }: { items: EvidenceItem[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const collapsible = items.length > EVIDENCE_PREVIEW;
+  const visible = collapsible && !expanded ? items.slice(0, EVIDENCE_PREVIEW) : items;
+  const hidden = items.length - EVIDENCE_PREVIEW;
+
+  return (
+    <section>
+      <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+        Evidence stack
+      </h3>
+      <ul className="divide-y divide-zinc-100">
+        {visible.map((item, i) => (
+          <EvidenceRow key={i} item={item} />
+        ))}
+      </ul>
+      {collapsible && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-3 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:border-zinc-300 transition-colors"
+        >
+          {expanded ? "Show less" : `Show ${hidden} more source${hidden !== 1 ? "s" : ""}`}
+        </button>
+      )}
+    </section>
+  );
+}
+
+function buildExecSummary(card: ProvocationCard): string {
+  const { signal_count, source_count, severity_max, all_domains } = card.metadata;
+
+  // Severity line - graceful fallback when null
+  const severityPhrase = severity_max
+    ? `The highest confirmed severity is ${severity_max}.`
+    : "Severity is unconfirmed across signals but signal volume and source agreement are elevated.";
+
+  // Signal and source context
+  const signalCount = signal_count ?? card.evidence_stack.length;
+  const sourceCount = source_count ?? new Set(card.evidence_stack.map((e) => e.source)).size;
+  const signalPhrase =
+    signalCount === 1
+      ? `A single high-importance signal triggered this card from ${sourceCount} source.`
+      : sourceCount > 1
+      ? `${signalCount} signals from ${sourceCount} independent sources are pointing at the same threat.`
+      : `${signalCount} signals from ${sourceCount} source are pointing at the same threat.`;
+
+  // Domain span context
+  const domains = all_domains ?? [card.risk_domain];
+  const domainPhrase =
+    domains.length > 1
+      ? `This spans ${domains.length} risk domains, which increases its relevance to board-level discussion.`
+      : "";
+
+  return [card.metadata.cluster_summary, severityPhrase, signalPhrase, domainPhrase]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function ExecSummary({ card }: { card: ProvocationCard }) {
+  return (
+    <section className="rounded-lg bg-zinc-50 border border-zinc-200 px-5 py-4">
+      <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">
+        At a glance
+      </h3>
+      <p className="text-sm text-zinc-700 leading-7">{buildExecSummary(card)}</p>
+    </section>
   );
 }
 
@@ -104,17 +178,11 @@ export default function CardModal({ card, onClose }: Props) {
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-6 py-6 flex flex-col gap-8">
 
+          {/* Exec summary */}
+          <ExecSummary card={card} />
+
           {/* Layer 2: Evidence */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-              Evidence stack
-            </h3>
-            <ul className="divide-y divide-zinc-100">
-              {card.evidence_stack.map((item, i) => (
-                <EvidenceRow key={i} item={item} />
-              ))}
-            </ul>
-          </section>
+          <EvidenceSection items={card.evidence_stack} />
 
           {/* Layer 4: Contextual question */}
           <section>
