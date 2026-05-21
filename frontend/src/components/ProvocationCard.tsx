@@ -106,7 +106,15 @@ export default function ProvocationCardComponent({
             {card.metadata.cluster_summary}
           </p>
         </div>
-        <p className="text-xs text-zinc-400">Click to open</p>
+        {card.affected_teams?.length > 0 && (
+          <div className="flex gap-1 flex-wrap">
+            {card.affected_teams.map((team) => (
+              <span key={team} className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+                {team}
+              </span>
+            ))}
+          </div>
+        )}
       </article>
 
       {open && <CardModal card={card} onClose={() => setOpen(false)} />}

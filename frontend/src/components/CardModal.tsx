@@ -163,6 +163,15 @@ export default function CardModal({ card, onClose }: Props) {
             <h2 className="text-lg font-semibold text-zinc-900 leading-snug">
               {card.signal_headline}
             </h2>
+            {card.affected_teams?.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {card.affected_teams.map((team) => (
+                  <span key={team} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                    {team}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}

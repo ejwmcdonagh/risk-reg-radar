@@ -98,6 +98,15 @@ _CARD_TOOL: dict[str, Any] = {
                     "patching this week and confirm completion before the next board cycle.'"
                 ),
             },
+            "affected_teams": {
+                "type": "array",
+                "description": (
+                    "Which security teams are most likely to need to act on this card. "
+                    "Pick 1-3 from this exact list: IAM, SOC, AppSec, Cloud/Infra, Network, Endpoint, GRC, Data/Privacy. "
+                    "Only include teams with a clear connection to the threat - do not include all teams by default."
+                ),
+                "items": {"type": "string"},
+            },
         },
         "required": [
             "signal_headline",
@@ -105,6 +114,7 @@ _CARD_TOOL: dict[str, Any] = {
             "contextual_question",
             "compliance_gap",
             "board_talking_point",
+            "affected_teams",
         ],
     },
 }
@@ -277,6 +287,7 @@ async def _generate_one(db: Any, client: anthropic.Anthropic, cluster: dict[str,
         "compliance_gap": card_input["compliance_gap"],
         "contextual_question": card_input["contextual_question"],
         "board_talking_point": card_input["board_talking_point"],
+        "affected_teams": card_input.get("affected_teams", []),
         "risk_domain": cluster["risk_domain"],
         "score": cluster["score"],
         "metadata": {

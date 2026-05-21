@@ -7,6 +7,17 @@ export type EvidenceItem = {
   point: string;
 };
 
+export const TEAM_LABELS = [
+  "IAM",
+  "SOC",
+  "AppSec",
+  "Cloud/Infra",
+  "Network",
+  "Endpoint",
+  "GRC",
+  "Data/Privacy",
+] as const;
+
 export type ProvocationCard = {
   id: string;
   cluster_id: string;
@@ -15,6 +26,7 @@ export type ProvocationCard = {
   compliance_gap: string;
   contextual_question: string;
   board_talking_point: string;
+  affected_teams: string[];
   risk_domain: string;
   score: number;
   generated_at: string;

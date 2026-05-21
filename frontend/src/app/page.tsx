@@ -1,5 +1,5 @@
 import { fetchCards, fetchProfile, DOMAINS, type ProvocationCard } from "@/lib/api";
-import SwimLanes from "@/components/SwimLanes";
+import Dashboard from "@/components/Dashboard";
 import Link from "next/link";
 
 export default async function Home() {
@@ -59,7 +59,7 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          <SwimLanes cards={cards} domains={DOMAINS} technologies={technologies} />
+          <Dashboard cards={cards} domains={DOMAINS} technologies={technologies} />
         )}
       </main>
     </div>
