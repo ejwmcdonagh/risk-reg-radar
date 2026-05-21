@@ -250,12 +250,11 @@ def _window_bounds(signals: list[dict[str, Any]]) -> tuple[str, str]:
 
 def _already_clustered_ids_for_domain(db: Any, signal_ids: list[str], domain: "RiskDomain") -> set[str]:
     """
-    Return the subset of signal_ids already in an active cluster for this specific domain.
+    Return the subset of signal_ids already in a cluster for this domain.
 
-    Each domain clusters independently - a signal can appear in a ransomware cluster
-    AND a detection_response cluster if it genuinely belongs to both. We only skip
-    signals already clustered within the same domain to prevent duplicates on daily
-    incremental runs, not across domains.
+    Includes dismissed clusters intentionally - if a user dismissed a card, its
+    signals should stay out of future runs. Only new signals ingested after the
+    dismissal can re-trigger a cluster for the same threat.
     """
     if not signal_ids:
         return set()
@@ -264,7 +263,6 @@ def _already_clustered_ids_for_domain(db: Any, signal_ids: list[str], domain: "R
         db.table("signal_clusters")
         .select("signal_ids")
         .eq("risk_domain", domain.value)
-        .neq("status", "dismissed")
         .execute()
     )
 

@@ -74,10 +74,12 @@ export default function ProvocationCardComponent({
   card,
   highlighted = false,
   simpleMode = false,
+  onDismiss,
 }: {
   card: ProvocationCard;
   highlighted?: boolean;
   simpleMode?: boolean;
+  onDismiss: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -155,7 +157,7 @@ export default function ProvocationCardComponent({
         </div>
       </article>
 
-      {open && <CardModal card={card} onClose={() => setOpen(false)} simpleMode={simpleMode} />}
+      {open && <CardModal card={card} onClose={() => setOpen(false)} onDismiss={onDismiss} simpleMode={simpleMode} />}
     </>
   );
 }

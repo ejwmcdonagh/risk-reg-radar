@@ -8,6 +8,7 @@ type Props = {
   domains: RiskDomain[];
   technologies: string[];
   simpleMode?: boolean;
+  onDismiss: (id: string) => void;
 };
 
 function cardMatchesTech(card: ProvocationCard, technologies: string[]): boolean {
@@ -22,7 +23,7 @@ function cardMatchesTech(card: ProvocationCard, technologies: string[]): boolean
   return technologies.some((t) => haystack.includes(t.toLowerCase()));
 }
 
-export default function SwimLanes({ cards, domains, technologies, simpleMode = false }: Props) {
+export default function SwimLanes({ cards, domains, technologies, simpleMode = false, onDismiss }: Props) {
   const byDomain = (domainId: string) => {
     const domainCards = cards.filter((c) => c.risk_domain === domainId);
     // Tech-matched cards float to the top within their score tier
@@ -67,6 +68,7 @@ export default function SwimLanes({ cards, domains, technologies, simpleMode = f
                   card={card}
                   highlighted={hasTech && cardMatchesTech(card, technologies)}
                   simpleMode={simpleMode}
+                  onDismiss={onDismiss}
                 />
               ))
             )}

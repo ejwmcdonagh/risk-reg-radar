@@ -65,6 +65,25 @@ async def list_cards(
     return {"cards": result.data, "offset": offset, "limit": limit}
 
 
+@router.post("/{card_id}/dismiss")
+async def dismiss_card(card_id: str):
+    """
+    Archive a card and mark its cluster as dismissed so the same signals
+    are not re-clustered on the next pipeline run.
+    """
+    db = get_db()
+    result = db.table("provocation_cards").select("id, cluster_id").eq("id", card_id).single().execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    cluster_id = result.data["cluster_id"]
+
+    db.table("provocation_cards").update({"status": "archived"}).eq("id", card_id).execute()
+    db.table("signal_clusters").update({"status": "dismissed"}).eq("id", cluster_id).execute()
+
+    return {"dismissed": True}
+
+
 @router.get("/{card_id}")
 async def get_card(card_id: str):
     """Fetch a single provocation card by ID, including all 5 layers."""

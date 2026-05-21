@@ -12,9 +12,14 @@ type Props = {
   technologies: string[];
 };
 
-export default function Dashboard({ cards, domains, technologies }: Props) {
+export default function Dashboard({ cards: initialCards, domains, technologies }: Props) {
+  const [cards, setCards] = useState(initialCards);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+
+  function handleDismiss(id: string) {
+    setCards((prev) => prev.filter((c) => c.id !== id));
+  }
 
   let visibleCards = cards;
 
@@ -47,7 +52,7 @@ export default function Dashboard({ cards, domains, technologies }: Props) {
         </button>
       </div>
       <TeamFilter selected={selectedTeam} onChange={setSelectedTeam} />
-      <SwimLanes cards={visibleCards} domains={domains} technologies={technologies} simpleMode={simpleMode} />
+      <SwimLanes cards={visibleCards} domains={domains} technologies={technologies} simpleMode={simpleMode} onDismiss={handleDismiss} />
     </div>
   );
 }

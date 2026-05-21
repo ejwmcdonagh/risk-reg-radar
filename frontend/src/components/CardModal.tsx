@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { ProvocationCard, EvidenceItem } from "@/lib/api";
-import { fetchTeamSummary } from "@/lib/api";
+import { fetchTeamSummary, dismissCard } from "@/lib/api";
 
 type Props = {
   card: ProvocationCard;
   onClose: () => void;
+  onDismiss: (id: string) => void;
   simpleMode?: boolean;
 };
 
@@ -151,8 +152,20 @@ function TeamSummarySection({ cardId, team }: { cardId: string; team: string }) 
   );
 }
 
-export default function CardModal({ card, onClose, simpleMode = false }: Props) {
+export default function CardModal({ card, onClose, onDismiss, simpleMode = false }: Props) {
   const [activeTeam, setActiveTeam] = useState<string | null>(null);
+  const [dismissing, setDismissing] = useState(false);
+
+  async function handleDismiss() {
+    setDismissing(true);
+    try {
+      await dismissCard(card.id);
+      onDismiss(card.id);
+      onClose();
+    } catch {
+      setDismissing(false);
+    }
+  }
 
   // Close on Escape
   useEffect(() => {
@@ -241,7 +254,7 @@ export default function CardModal({ card, onClose, simpleMode = false }: Props) 
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto flex-1 px-6 py-6 flex flex-col gap-8">
+        <div className="overflow-y-auto flex-1 px-6 py-6 flex flex-col gap-8 pb-4">
 
           {simpleMode ? (
             <>
@@ -327,6 +340,17 @@ export default function CardModal({ card, onClose, simpleMode = false }: Props) 
             </>
           )}
 
+        </div>
+
+        {/* Sticky dismiss footer */}
+        <div className="shrink-0 border-t border-zinc-100 px-6 py-3 flex justify-end">
+          <button
+            onClick={handleDismiss}
+            disabled={dismissing}
+            className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-700 disabled:opacity-50 transition-colors"
+          >
+            {dismissing ? "Dismissing..." : "Dismiss card"}
+          </button>
         </div>
       </div>
     </div>

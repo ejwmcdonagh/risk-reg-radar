@@ -108,6 +108,11 @@ export async function fetchBuiltinSources(): Promise<BuiltinSource[]> {
   return data.sources ?? [];
 }
 
+export async function dismissCard(cardId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/cards/${cardId}/dismiss`, { method: "POST" });
+  if (!res.ok) throw new Error(`Failed to dismiss card: ${res.status}`);
+}
+
 export async function fetchTeamSummary(cardId: string, team: string): Promise<string> {
   const res = await fetch(`${API_BASE}/api/cards/${cardId}/team-summary`, {
     method: "POST",
