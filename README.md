@@ -292,7 +292,17 @@ model="claude-opus-4-7",
 thinking={"type": "adaptive"},
 ```
 
-Opus costs about $0.50 per full run. Token usage is logged on every card so you can track costs.
+### Approximate costs per full pipeline run
+
+These are based on a corpus of around 1,000 signals generating roughly 30 cards. Costs scale with corpus size.
+
+| Step | Haiku | Opus |
+|------|-------|------|
+| Clustering (~150k input tokens) | ~$0.15 | ~$0.75 |
+| Card generation (~30 cards) | ~$0.17 | ~$0.87 |
+| **Total** | **~$0.33** | **~$1.65** |
+
+Token usage per run is logged in the `metadata.usage` field on every cluster and card row in the database, so you can track actual spend over time.
 
 ---
 
