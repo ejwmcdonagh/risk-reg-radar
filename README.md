@@ -27,11 +27,11 @@ Each card has five parts:
 Every day the system:
 
 1. Pulls threat data from sixteen built-in sources (see list below)
-2. Groups signals that point at the same underlying threat
-3. Scores each group by severity, recency, and how many sources agree
+2. Groups signals that point at the same underlying threat, independently per risk domain so no domain starves another
+3. Scores each group by severity, recency, source count, and active exploitation status (CISA KEV signals add a +20 bonus)
 4. Writes a card for every group above the score threshold
 
-You can turn any source on or off, add your own RSS feeds, and tell it which technologies your organisation uses. Cards that mention your tech stack float to the top. You can filter the board by risk domain to see cross-lane cards that touch that domain, and by security team (IAM, SOC, AppSec, and others) to focus on what is relevant to a specific group.
+You can turn any source on or off, add your own RSS feeds, and tell it which technologies your organisation uses. Cards that mention your tech stack float to the top. You can filter the board by risk domain to see cross-lane cards that touch that domain, and by security team (IAM, SOC, AppSec, and others) to focus on what is relevant to a specific group. A simple mode toggle rewrites card content for non-technical board members.
 
 ### Built-in sources
 
@@ -102,8 +102,8 @@ Install each of these before going any further.
 Open a terminal. On Mac that is the Terminal app. On Windows that is PowerShell (search for it in the Start menu).
 
 ```bash
-git clone https://github.com/ejwmcdonagh/reg-radar.git
-cd reg-radar
+git clone https://github.com/ejwmcdonagh/risk-reg-radar.git
+cd risk-reg-radar
 ```
 
 If you do not have Git installed, download it from [git-scm.com](https://git-scm.com/).
@@ -323,7 +323,7 @@ Go to `http://localhost:3000` and click **Customize your feed** in the top right
 
 **Your technology stack** - add the vendors and products your organisation runs (for example: Palo Alto, Microsoft Exchange, Cisco). Cards that mention these will be highlighted and sorted to the top of each lane.
 
-**Signal sources** - all thirteen built-in sources are listed with an Active/Paused toggle. Pause any source you do not want. Changes take effect on the next scheduled run.
+**Signal sources** - all sixteen built-in sources are listed with an Active/Paused toggle. Pause any source you do not want. Changes take effect on the next scheduled run.
 
 **Add your own sources** - paste any RSS or Atom feed URL and give it a name. It will be ingested daily alongside the built-in sources.
 
@@ -402,7 +402,7 @@ You have hit the 60 requests/hour unauthenticated limit. Either wait an hour and
 ## Project structure
 
 ```
-reg-radar/
+risk-reg-radar/
 ├── backend/                  # Python API and data pipeline
 │   ├── app/
 │   │   ├── ingestion/        # One file per data source
@@ -425,7 +425,7 @@ reg-radar/
 - [x] Step 1 - Pull threat data from CISA, NVD, NCSC
 - [x] Step 2 - Group related signals into clusters
 - [x] Step 3 - Generate 5-layer intelligence cards using AI
-- [x] Step 4 - Dashboard with five domain lanes, card modal, tech stack highlighting, domain filter, team filter, and per-team AI impact summaries
+- [x] Step 4 - Dashboard with five domain lanes, card modal, tech stack highlighting, domain filter, team filter, per-team AI impact summaries, and simple mode for board-level readers
 - [ ] Step 5 - Connect to your SIEM or ticketing system
 - [ ] Step 6 - Weekly email digest
 - [ ] Step 7 - Onboarding flow for new organisations

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     clustering_cron: str = "0 8 * * *"
 
     # Minimum cluster score to qualify for card generation
-    card_score_threshold: float = 30.0
+    card_score_threshold: float = 20.0
     # Card generation runs after clustering (default: daily at 09:00 UTC)
     card_generation_cron: str = "0 9 * * *"
 

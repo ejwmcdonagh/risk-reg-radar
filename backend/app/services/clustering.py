@@ -29,6 +29,7 @@ import anthropic
 
 from app.config import settings
 from app.db.client import get_db
+from app.domain_mapper import map_domains
 from app.models.enums import RiskDomain, Severity
 
 logger = logging.getLogger(__name__)
@@ -247,24 +248,22 @@ def _window_bounds(signals: list[dict[str, Any]]) -> tuple[str, str]:
     return min(dates).isoformat(), max(dates).isoformat()
 
 
-def _already_clustered_ids(db: Any, signal_ids: list[str]) -> set[str]:
+def _already_clustered_ids_for_domain(db: Any, signal_ids: list[str], domain: "RiskDomain") -> set[str]:
     """
-    Return the subset of signal_ids that already appear in an active cluster.
+    Return the subset of signal_ids already in an active cluster for this specific domain.
 
-    We query the signal_clusters table and look for any row whose signal_ids
-    array overlaps ours using Postgres array overlap operator (&&). Signals
-    already in a cluster are excluded from re-clustering so we don't generate
-    duplicate cluster rows across daily runs.
+    Each domain clusters independently - a signal can appear in a ransomware cluster
+    AND a detection_response cluster if it genuinely belongs to both. We only skip
+    signals already clustered within the same domain to prevent duplicates on daily
+    incremental runs, not across domains.
     """
     if not signal_ids:
         return set()
 
-    # PostgREST doesn't expose the && operator directly, so we fetch all
-    # active cluster rows and filter in Python. This is acceptable for V1
-    # because the cluster count is small - revisit with an RPC if it grows.
     result = (
         db.table("signal_clusters")
         .select("signal_ids")
+        .eq("risk_domain", domain.value)
         .neq("status", "dismissed")
         .execute()
     )
@@ -276,15 +275,11 @@ def _already_clustered_ids(db: Any, signal_ids: list[str]) -> set[str]:
     return clustered
 
 
-# Process specific domains first so their signals get claimed before the
-# vulnerability_patch catch-all runs. A ransomware advisory should cluster
-# in ransomware_extortion, not end up duplicated in vulnerability_patch too.
-# vulnerability_patch runs last and only sees what nothing else claimed.
 _DOMAIN_ORDER = [
     RiskDomain.RANSOMWARE_EXTORTION,
+    RiskDomain.DETECTION_RESPONSE,
     RiskDomain.SUPPLY_CHAIN,
     RiskDomain.DATA_EXPOSURE,
-    RiskDomain.DETECTION_RESPONSE,
     RiskDomain.IDENTITY_CREDENTIAL,
     RiskDomain.VULNERABILITY_PATCH,
 ]
@@ -295,10 +290,11 @@ async def run_clustering() -> int:
     Entry point called by the scheduler and the manual API trigger.
     Returns the number of new clusters written to the DB.
 
-    Processes domains in specificity order (specific first, vulnerability_patch
-    last). Signals claimed by an earlier domain are excluded from later ones,
-    so each signal ends up in exactly one cluster. This prevents vulnerability_patch
-    from ballooning with signals that already have a more precise home.
+    Each domain clusters independently against all its tagged signals. A signal
+    can appear in multiple domains' clusters when it genuinely spans domains -
+    a threat intel report about ransomware TTPs and detection gaps belongs in
+    both ransomware_extortion and detection_response. Domain order no longer
+    affects which domains get coverage.
     """
     if not settings.anthropic_api_key:
         logger.warning("ANTHROPIC_API_KEY not set - skipping clustering run")
@@ -322,37 +318,41 @@ async def run_clustering() -> int:
         logger.info("Clustering skipped - fewer than 2 signals in window")
         return 0
 
-    existing_ids = _already_clustered_ids(db, [s["id"] for s in all_signals])
-    unclustered = [s for s in all_signals if s["id"] not in existing_ids]
-
-    if not unclustered:
-        logger.info("Clustering skipped - all recent signals already clustered")
-        return 0
+    # Compute domains fresh from current domain_mapper rules rather than reading
+    # the stored risk_domains column. This means domain rule changes take effect
+    # immediately on the next clustering run without needing a backfill.
+    for sig in all_signals:
+        sig["_live_domains"] = [
+            d.value for d in map_domains(
+                sig.get("title") or "",
+                sig.get("summary"),
+                sig.get("tags") or [],
+            )
+        ]
 
     logger.info(
-        "Clustering %d unclustered signals across %d domains (window: %d days)",
-        len(unclustered), len(RiskDomain), settings.clustering_window_days,
+        "Clustering %d signals across %d domains (window: %d days)",
+        len(all_signals), len(RiskDomain), settings.clustering_window_days,
     )
 
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-
-    # Track signals claimed this run so specific domains get first pick
-    within_run_claimed: set[str] = set()
     total_written = 0
 
     for domain in _DOMAIN_ORDER:
+        already_clustered = _already_clustered_ids_for_domain(
+            db, [s["id"] for s in all_signals], domain
+        )
         domain_signals = [
-            s for s in unclustered
-            if domain.value in (s.get("risk_domains") or [])
-            and s["id"] not in within_run_claimed
+            s for s in all_signals
+            if domain.value in s["_live_domains"]
+            and s["id"] not in already_clustered
         ]
 
         if not domain_signals:
-            logger.info("Domain %s: no unclaimed signals, skipping", domain.value)
+            logger.info("Domain %s: no new signals to cluster, skipping", domain.value)
             continue
 
-        written, claimed = await _cluster_domain(db, client, domain, domain_signals)
-        within_run_claimed.update(claimed)
+        written, _ = await _cluster_domain(db, client, domain, domain_signals)
         total_written += written
 
     logger.info("Clustering complete: %d new clusters written", total_written)
@@ -373,11 +373,9 @@ async def _cluster_domain(
     signals: list[dict[str, Any]],
 ) -> tuple[int, set[str]]:
     """
-    Cluster all signals for one domain, chunking into batches of _BATCH_SIZE
-    so no single LLM call is overwhelmed. Signals are sorted by severity then
-    recency before chunking so related high-priority signals land in the same
-    batch and are most likely to be grouped together.
-    Returns (total_clusters_written, set_of_all_claimed_signal_ids).
+    Cluster all signals for one domain, chunking into batches of _BATCH_SIZE.
+    Signals are sorted by severity then recency so related high-priority signals
+    land in the same batch. Returns (total_clusters_written, set_of_clustered_ids).
     """
     sorted_signals = sorted(
         signals,
@@ -390,18 +388,18 @@ async def _cluster_domain(
     batches = [sorted_signals[i:i + _BATCH_SIZE] for i in range(0, len(sorted_signals), _BATCH_SIZE)]
 
     total_written = 0
-    total_claimed: set[str] = set()
+    total_clustered: set[str] = set()
 
     for batch_num, batch in enumerate(batches, 1):
         logger.info(
             "Domain %s: batch %d/%d (%d signals)",
             domain.value, batch_num, len(batches), len(batch),
         )
-        written, claimed = await _cluster_batch(db, client, domain, batch, batch_num, len(batches))
+        written, clustered = await _cluster_batch(db, client, domain, batch, batch_num, len(batches))
         total_written += written
-        total_claimed.update(claimed)
+        total_clustered.update(clustered)
 
-    return total_written, total_claimed
+    return total_written, total_clustered
 
 
 async def _cluster_batch(

@@ -7,6 +7,7 @@ import { fetchTeamSummary } from "@/lib/api";
 type Props = {
   card: ProvocationCard;
   onClose: () => void;
+  simpleMode?: boolean;
 };
 
 function ScoreBadge({ score }: { score: number }) {
@@ -150,7 +151,7 @@ function TeamSummarySection({ cardId, team }: { cardId: string; team: string }) 
   );
 }
 
-export default function CardModal({ card, onClose }: Props) {
+export default function CardModal({ card, onClose, simpleMode = false }: Props) {
   const [activeTeam, setActiveTeam] = useState<string | null>(null);
 
   // Close on Escape
@@ -240,56 +241,89 @@ export default function CardModal({ card, onClose }: Props) {
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-6 py-6 flex flex-col gap-8">
 
-          {/* Exec summary */}
-          <ExecSummary card={card} />
+          {simpleMode ? (
+            <>
+              {/* Simple mode: board talking point first, no technical layers */}
+              <section className="rounded-lg bg-slate-50 border border-slate-200 px-5 py-5">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+                  What is happening
+                </h3>
+                <ul className="flex flex-col gap-3">
+                  {card.board_talking_point
+                    .split(/(?<=[.!?])\s+/)
+                    .filter((s) => s.trim().length > 0)
+                    .map((sentence, i) => (
+                      <li key={i} className="flex gap-3 items-start">
+                        <span className="mt-[0.4rem] h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
+                        <span className="text-sm text-slate-700 leading-7">{sentence.trim()}</span>
+                      </li>
+                    ))}
+                </ul>
+              </section>
 
-          {/* Team-specific impact - shown when a team badge is clicked */}
-          {activeTeam && (
-            <TeamSummarySection key={activeTeam} cardId={card.id} team={activeTeam} />
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+                  Question to ask your team
+                </h3>
+                <blockquote className="rounded-lg border-l-4 border-zinc-300 bg-zinc-50 px-5 py-4">
+                  <p className="text-base text-zinc-800 font-medium leading-7 italic">
+                    {card.contextual_question}
+                  </p>
+                </blockquote>
+              </section>
+
+              {activeTeam && (
+                <TeamSummarySection key={activeTeam} cardId={card.id} team={activeTeam} />
+              )}
+            </>
+          ) : (
+            <>
+              <ExecSummary card={card} />
+
+              {activeTeam && (
+                <TeamSummarySection key={activeTeam} cardId={card.id} team={activeTeam} />
+              )}
+
+              <EvidenceSection items={card.evidence_stack} />
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+                  Question for your team
+                </h3>
+                <blockquote className="rounded-lg border-l-4 border-zinc-300 bg-zinc-50 px-5 py-4">
+                  <p className="text-base text-zinc-800 font-medium leading-7 italic">
+                    {card.contextual_question}
+                  </p>
+                </blockquote>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+                  Regulatory exposure
+                </h3>
+                <p className="text-sm text-zinc-700 leading-7">{card.compliance_gap}</p>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+                  Board talking point
+                </h3>
+                <div className="rounded-lg bg-slate-50 border border-slate-200 px-5 py-5">
+                  <ul className="flex flex-col gap-3">
+                    {card.board_talking_point
+                      .split(/(?<=[.!?])\s+/)
+                      .filter((s) => s.trim().length > 0)
+                      .map((sentence, i) => (
+                        <li key={i} className="flex gap-3 items-start">
+                          <span className="mt-[0.4rem] h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
+                          <span className="text-sm text-slate-700 leading-6">{sentence.trim()}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </section>
+            </>
           )}
-
-          {/* Layer 2: Evidence */}
-          <EvidenceSection items={card.evidence_stack} />
-
-          {/* Layer 4: Contextual question */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-              Question for your team
-            </h3>
-            <blockquote className="rounded-lg border-l-4 border-zinc-300 bg-zinc-50 px-5 py-4">
-              <p className="text-base text-zinc-800 font-medium leading-7 italic">
-                {card.contextual_question}
-              </p>
-            </blockquote>
-          </section>
-
-          {/* Layer 3: Regulatory exposure */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-              Regulatory exposure
-            </h3>
-            <p className="text-sm text-zinc-700 leading-7">{card.compliance_gap}</p>
-          </section>
-
-          {/* Layer 5: Board talking point */}
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-              Board talking point
-            </h3>
-            <div className="rounded-lg bg-slate-50 border border-slate-200 px-5 py-5">
-              <ul className="flex flex-col gap-3">
-                {card.board_talking_point
-                  .split(/(?<=[.!?])\s+/)
-                  .filter((s) => s.trim().length > 0)
-                  .map((sentence, i) => (
-                    <li key={i} className="flex gap-3 items-start">
-                      <span className="mt-[0.4rem] h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
-                      <span className="text-sm text-slate-700 leading-6">{sentence.trim()}</span>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          </section>
 
         </div>
       </div>

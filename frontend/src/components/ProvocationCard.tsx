@@ -73,9 +73,11 @@ function ScoreBadge({ score }: { score: number }) {
 export default function ProvocationCardComponent({
   card,
   highlighted = false,
+  simpleMode = false,
 }: {
   card: ProvocationCard;
   highlighted?: boolean;
+  simpleMode?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -112,10 +114,14 @@ export default function ProvocationCardComponent({
             </span>
           </div>
           <p className="text-sm font-semibold leading-snug text-zinc-900 line-clamp-3">
-            {card.signal_headline}
+            {simpleMode
+              ? card.board_talking_point.split(/(?<=[.!?])\s+/)[0]
+              : card.signal_headline}
           </p>
           <p className="text-xs text-zinc-500 line-clamp-3">
-            {card.metadata.cluster_summary}
+            {simpleMode
+              ? card.board_talking_point.split(/(?<=[.!?])\s+/).slice(1, 3).join(" ")
+              : card.metadata.cluster_summary}
           </p>
         </div>
         <div className="flex flex-col gap-1 mt-2">
@@ -146,7 +152,7 @@ export default function ProvocationCardComponent({
         </div>
       </article>
 
-      {open && <CardModal card={card} onClose={() => setOpen(false)} />}
+      {open && <CardModal card={card} onClose={() => setOpen(false)} simpleMode={simpleMode} />}
     </>
   );
 }

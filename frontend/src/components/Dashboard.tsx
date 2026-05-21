@@ -29,11 +29,25 @@ export default function Dashboard({ cards, domains, technologies }: Props) {
     );
   }
 
+  const [simpleMode, setSimpleMode] = useState(false);
+
   return (
     <div className="flex flex-col gap-3 h-full">
-      <DomainFilter selected={selectedDomain} onChange={setSelectedDomain} />
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <DomainFilter selected={selectedDomain} onChange={setSelectedDomain} />
+        <button
+          onClick={() => setSimpleMode((v) => !v)}
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+            simpleMode
+              ? "bg-zinc-800 text-white border-zinc-800"
+              : "border-zinc-300 text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50"
+          }`}
+        >
+          {simpleMode ? "Simple mode on" : "Simple mode"}
+        </button>
+      </div>
       <TeamFilter selected={selectedTeam} onChange={setSelectedTeam} />
-      <SwimLanes cards={visibleCards} domains={domains} technologies={technologies} />
+      <SwimLanes cards={visibleCards} domains={domains} technologies={technologies} simpleMode={simpleMode} />
     </div>
   );
 }
