@@ -53,11 +53,22 @@ _DOMAIN_KEYWORDS: list[tuple[RiskDomain, frozenset[str]]] = [
         ]),
     ),
     (
+        RiskDomain.CLOUD_SECURITY,
+        frozenset([
+            "aws", "azure", "google cloud", "gcp", "cloud provider",
+            "kubernetes", "k8s", "container", "docker", "eks", "aks", "gke",
+            "terraform", "infrastructure as code", "iac", "serverless", "lambda",
+            "cloud misconfiguration", "cloud iam", "service account", "iam role",
+            "ec2", "blob storage", "cloud storage", "s3 bucket",
+            "cloud native", "cloudtrail", "secret manager", "key vault",
+        ]),
+    ),
+    (
         RiskDomain.DATA_EXPOSURE,
         frozenset([
-            "data breach", "misconfiguration", "s3 bucket", "storage",
+            "data breach", "misconfiguration", "storage",
             "exfiltration", "data leak", "exposure", "pii", "gdpr",
-            "cloud storage", "publicly accessible",
+            "publicly accessible",
         ]),
     ),
     (

@@ -73,6 +73,7 @@ _CLUSTER_TOOL: dict[str, Any] = {
                                 "detection_response",
                                 "data_exposure",
                                 "ransomware_extortion",
+                                "cloud_security",
                             ],
                             "description": "Primary risk domain for this cluster",
                         },
@@ -250,6 +251,7 @@ def _already_clustered_ids(db: Any, signal_ids: list[str]) -> set[str]:
 _DOMAIN_ORDER = [
     RiskDomain.RANSOMWARE_EXTORTION,
     RiskDomain.SUPPLY_CHAIN,
+    RiskDomain.CLOUD_SECURITY,
     RiskDomain.DATA_EXPOSURE,
     RiskDomain.DETECTION_RESPONSE,
     RiskDomain.IDENTITY_CREDENTIAL,

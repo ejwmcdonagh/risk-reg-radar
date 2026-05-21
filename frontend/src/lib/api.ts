@@ -55,6 +55,7 @@ export const DOMAINS: RiskDomain[] = [
   { id: "detection_response",    label: "Detection & Response",    description: "Dwell time, alert fatigue, logging gaps" },
   { id: "data_exposure",         label: "Data Exposure",           description: "Misconfigured storage, exfiltration vectors" },
   { id: "ransomware_extortion",  label: "Ransomware & Extortion",  description: "Encryption, extortion, cross-domain worst-case" },
+  { id: "cloud_security",        label: "Cloud Security",          description: "Cloud misconfigs, container risks, IAM in AWS/Azure/GCP" },
 ];
 
 export type OrgProfile = {

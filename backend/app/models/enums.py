@@ -47,3 +47,4 @@ class RiskDomain(str, Enum):
     DETECTION_RESPONSE = "detection_response"
     DATA_EXPOSURE = "data_exposure"
     RANSOMWARE_EXTORTION = "ransomware_extortion"
+    CLOUD_SECURITY = "cloud_security"
