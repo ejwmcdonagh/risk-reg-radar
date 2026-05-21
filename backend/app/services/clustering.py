@@ -297,7 +297,11 @@ async def run_clustering() -> int:
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
 
     response = client.messages.create(
+        # To switch to Opus, replace the model string and uncomment the thinking line.
+        # Thinking is not supported on Haiku - only uncomment it when using Opus.
         model="claude-haiku-4-5-20251001",
+        # model="claude-opus-4-7",
+        # thinking={"type": "adaptive"},
         max_tokens=4096,
         system=_SYSTEM_PROMPT,
         tools=[_CLUSTER_TOOL],

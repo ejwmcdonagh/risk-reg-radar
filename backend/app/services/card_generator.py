@@ -242,7 +242,11 @@ async def _generate_one(db: Any, client: anthropic.Anthropic, cluster: dict[str,
     )
 
     response = client.messages.create(
+        # To switch to Opus, replace the model string and uncomment the thinking line.
+        # Thinking is not supported on Haiku - only uncomment it when using Opus.
         model="claude-haiku-4-5-20251001",
+        # model="claude-opus-4-7",
+        # thinking={"type": "adaptive"},
         max_tokens=2048,
         system=_SYSTEM_PROMPT,
         tools=[_CARD_TOOL],

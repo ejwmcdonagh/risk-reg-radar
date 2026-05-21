@@ -275,32 +275,37 @@ The system uses Claude Haiku by default. This costs about $0.10 per full pipelin
 
 For production, switch to Claude Opus for higher quality cards.
 
-Open these two files in a text editor:
+Both service files already have the Opus settings written in as comments. Open these two files:
 - `backend/app/services/clustering.py`
 - `backend/app/services/card_generator.py`
 
-In each file, find the line that says:
+In each file, find this block:
 
 ```python
 model="claude-haiku-4-5-20251001",
+# model="claude-opus-4-7",
+# thinking={"type": "adaptive"},
 ```
 
-Change it to:
+To switch to Opus, comment out the Haiku line and uncomment the two Opus lines:
 
 ```python
+# model="claude-haiku-4-5-20251001",
 model="claude-opus-4-7",
 thinking={"type": "adaptive"},
 ```
 
+Note: `thinking` only works with Opus. If you switch back to Haiku, comment it out again or the API will return an error.
+
 ### Approximate costs per full pipeline run
 
-These are based on a corpus of around 1,000 signals generating roughly 30 cards. Costs scale with corpus size.
+These are based on a corpus of around 1,000 signals generating roughly 54 cards. Costs scale with corpus size and number of cards.
 
 | Step | Haiku | Opus |
 |------|-------|------|
 | Clustering (~150k input tokens) | ~$0.15 | ~$0.75 |
-| Card generation (~30 cards) | ~$0.17 | ~$0.87 |
-| **Total** | **~$0.33** | **~$1.65** |
+| Card generation (~54 cards) | ~$0.32 | ~$1.62 |
+| **Total** | **~$0.47** | **~$2.37** |
 
 Token usage per run is logged in the `metadata.usage` field on every cluster and card row in the database, so you can track actual spend over time.
 
