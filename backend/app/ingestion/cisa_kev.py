@@ -18,6 +18,7 @@ from app.http import async_client
 from app.ingestion.base import BaseIngester
 from app.models.enums import SignalSource, SignalType
 from app.models.signal import Signal
+from app.severity_mapper import infer_severity
 
 FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
@@ -50,6 +51,7 @@ class CisaKevIngester(BaseIngester):
             signal_type=SignalType.VULNERABILITY,
             title=title,
             summary=summary,
+            severity=infer_severity(title, summary),
             risk_domains=map_domains(title, summary, tags),
             tags=tags,
             url=f"https://www.cisa.gov/known-exploited-vulnerabilities-catalog",

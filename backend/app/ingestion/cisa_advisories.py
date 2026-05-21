@@ -24,6 +24,7 @@ from app.http import async_client
 from app.ingestion.base import BaseIngester
 from app.models.enums import SignalSource, SignalType
 from app.models.signal import Signal
+from app.severity_mapper import infer_severity
 
 FEED_URL = "https://www.cisa.gov/cybersecurity-advisories/all.xml"
 
@@ -66,6 +67,7 @@ class CisaAdvisoriesIngester(BaseIngester):
             title=title,
             summary=summary,
             published_at=published_at,
+            severity=infer_severity(title, summary),
             risk_domains=map_domains(title, summary, tags),
             tags=tags,
             url=link,

@@ -22,6 +22,8 @@ dependencies = [
     "supabase>=2.4.0",
     # Config via environment variables
     "pydantic-settings>=2.2.0",
+    # Anthropic SDK — signal clustering and provocation card generation
+    "anthropic>=0.40.0",
     # Uses the OS native trust store (macOS Keychain, Windows cert store) so
     # corporate proxy CAs and system-installed certs are trusted automatically
     "truststore>=0.9.0",

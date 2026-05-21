@@ -137,20 +137,29 @@ Dashboard runs at `http://localhost:3000`.
 | `GET` | `/api/signals/{id}` | Single signal |
 | `POST` | `/api/ingest/run?source={source}` | Trigger a manual ingestion run |
 | `GET` | `/api/ingest/status` | Recent ingestion run history |
+| `POST` | `/api/clusters/run` | Trigger signal clustering |
+| `GET` | `/api/clusters` | List clusters. Query params: `risk_domain`, `status`, `min_score`, `limit`, `offset` |
+| `GET` | `/api/clusters/{id}` | Single cluster |
+| `POST` | `/api/cards/run` | Trigger provocation card generation |
+| `GET` | `/api/cards` | List cards. Query params: `risk_domain`, `status`, `min_score`, `limit`, `offset` |
+| `GET` | `/api/cards/{id}` | Single card with all 5 layers |
 | `GET` | `/health` | Health check |
 
 Valid `source` values: `cisa_kev`, `cisa_advisory`, `ncsc`, `nvd`
 
 Valid `risk_domain` values: `identity_credential`, `vulnerability_patch`, `supply_chain`, `detection_response`, `data_exposure`, `ransomware_extortion`
 
-### Manual ingestion (development)
+### Manual pipeline run (development)
 
 ```bash
-# Trigger a CISA KEV run
+# Run the full pipeline: ingest all sources, cluster, generate cards
 curl -X POST "http://localhost:8000/api/ingest/run?source=cisa_kev"
+curl -X POST "http://localhost:8000/api/ingest/run?source=nvd"
+curl -X POST "http://localhost:8000/api/clusters/run"
+curl -X POST "http://localhost:8000/api/cards/run"
 
-# List signals in the identity domain
-curl "http://localhost:8000/api/signals?risk_domain=identity_credential&limit=10"
+# List the top cards
+curl "http://localhost:8000/api/cards" | python3 -m json.tool
 ```
 
 ---
@@ -186,13 +195,55 @@ Domain mapping logic lives in `backend/app/domain_mapper.py` and is keyword-base
 
 ## Build sequence
 
-- [x] **Step 1** - Signal ingestion layer (this)
-- [ ] **Step 2** - Signal combination detection logic
-- [ ] **Step 3** - Provocation card generator (prompt engineering)
+- [x] **Step 1** - Signal ingestion layer
+- [x] **Step 2** - Signal combination detection logic
+- [x] **Step 3** - Provocation card generator (prompt engineering)
 - [ ] **Step 4** - Dashboard shell (domain swim-lane layout)
 - [ ] **Step 5** - MCP integration (SIEM + ticketing aggregation)
 - [ ] **Step 6** - Email digest renderer
 - [ ] **Step 7** - Onboarding flow
+
+---
+
+## LLM model configuration
+
+Two pipeline steps call the Anthropic API: clustering (`backend/app/services/clustering.py`) and card generation (`backend/app/services/card_generator.py`). Both default to `claude-haiku-4-5-20251001` for cost-efficient testing.
+
+### Switching models
+
+**To use Haiku (testing, low cost):**
+
+Both files are already configured for Haiku. No changes needed.
+
+**To use Opus (production quality):**
+
+In `clustering.py` around line 168 and `card_generator.py` around line 127, change:
+
+```python
+# Haiku (current default)
+model="claude-haiku-4-5-20251001",
+max_tokens=4096,
+```
+
+to:
+
+```python
+# Opus — add thinking for better cluster quality
+model="claude-opus-4-7",
+max_tokens=4096,
+thinking={"type": "adaptive"},
+```
+
+Note: `thinking` is not supported on Haiku. Remove it when switching back.
+
+### Approximate costs per pipeline run
+
+| Model | Clustering (~15k input tokens) | Card generation (~2k tokens x 10 cards) |
+|-------|-------------------------------|----------------------------------------|
+| Haiku | ~$0.015 | ~$0.02 |
+| Opus | ~$0.075 | ~$0.10 |
+
+Costs are estimates based on a 1,000 signal corpus. Token usage per run is logged in `metadata.usage` on each cluster and card row.
 
 ---
 

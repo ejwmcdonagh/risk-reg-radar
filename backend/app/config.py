@@ -14,6 +14,19 @@ class Settings(BaseSettings):
     # Optional NVD API key — increases rate limit from ~5 to 50 req/30s
     nvd_api_key: str = ""
 
+    # Anthropic API key — required for signal clustering (Step 2) and card generation (Step 3)
+    anthropic_api_key: str = ""
+
+    # How many days of signals to look back when building clusters
+    clustering_window_days: int = 7
+    # Cron for running the clustering job (default: daily at 08:00 UTC, after ingestion)
+    clustering_cron: str = "0 8 * * *"
+
+    # Minimum cluster score to qualify for card generation
+    card_score_threshold: float = 30.0
+    # Card generation runs after clustering (default: daily at 09:00 UTC)
+    card_generation_cron: str = "0 9 * * *"
+
     # Cron expressions (UTC). Defaults match the values in .env.example.
     cisa_kev_cron: str = "0 6 * * *"
     cisa_advisories_cron: str = "0 */6 * * *"
