@@ -129,6 +129,8 @@ async def generate_cards(cluster_ids: list[str] | None = None) -> int:
 
     db = get_db()
 
+    _MAX_ATTEMPTS = 3
+
     if cluster_ids:
         result = (
             db.table("signal_clusters")
@@ -137,10 +139,13 @@ async def generate_cards(cluster_ids: list[str] | None = None) -> int:
             .execute()
         )
     else:
+        # Exclude clusters that have already failed too many times - they won't
+        # suddenly start working without a code change or data fix
         result = (
             db.table("signal_clusters")
             .select("*")
             .eq("status", "pending")
+            .lt("card_generation_attempts", _MAX_ATTEMPTS)
             .gte("score", settings.card_score_threshold)
             .order("score", desc=True)
             .execute()
@@ -163,7 +168,17 @@ async def generate_cards(cluster_ids: list[str] | None = None) -> int:
                 written += 1
         except Exception:
             logger.exception("Card generation failed for cluster %s", cluster["id"])
-            # Continue to next cluster rather than aborting the whole run
+            attempts = (cluster.get("card_generation_attempts") or 0) + 1
+            new_status = "failed" if attempts >= _MAX_ATTEMPTS else "pending"
+            db.table("signal_clusters").update({
+                "card_generation_attempts": attempts,
+                "status": new_status,
+            }).eq("id", cluster["id"]).execute()
+            if new_status == "failed":
+                logger.warning(
+                    "Cluster %s marked failed after %d attempts - will not be retried",
+                    cluster["id"], attempts,
+                )
             continue
 
     logger.info("Card generation complete: %d cards written", written)

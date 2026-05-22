@@ -1,7 +1,10 @@
+import logging
 from typing import Annotated
 
 import anthropic
 from fastapi import APIRouter, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 from app.config import settings
@@ -24,7 +27,9 @@ async def trigger_card_generation(cluster_ids: list[str] | None = None):
     try:
         written = await generate_cards(cluster_ids=cluster_ids)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        # Log full exception server-side; don't expose internal detail to the caller
+        logger.exception("Card generation run failed")
+        raise HTTPException(status_code=500, detail="Card generation failed") from exc
     return {"cards_written": written}
 
 

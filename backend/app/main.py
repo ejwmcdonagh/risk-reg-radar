@@ -19,6 +19,7 @@ truststore.inject_into_ssl()
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.db.client import get_db
 from app.routes import cards, clusters, ingestion, profile, signals
 from app.scheduler import create_scheduler
 
@@ -48,11 +49,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS is permissive in development. In production, restrict origins to the
-# frontend domain via the ALLOWED_ORIGINS environment variable (add to config.py).
+# In production, set ALLOWED_ORIGINS="https://your-domain.com" in the env.
+# Defaults to ["*"] so local dev works without any config.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -66,4 +67,13 @@ app.include_router(profile.router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    # Verify DB connectivity, not just process liveness - a dead DB connection
+    # would otherwise look healthy to a load balancer or uptime monitor
+    try:
+        db = get_db()
+        db.table("org_profile").select("id").eq("id", 1).execute()
+        return {"status": "ok"}
+    except Exception:
+        logger.exception("Health check DB ping failed")
+        from fastapi import Response
+        return Response(content='{"status":"degraded"}', status_code=503, media_type="application/json")

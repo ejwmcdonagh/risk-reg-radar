@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # Off by default so local dev runs stay fully manual.
     scheduler_enabled: bool = False
 
+    # Allowed CORS origins. In production, set to your frontend domain (e.g. "https://pulse.example.com").
+    # Accepts a comma-separated string via the env var: ALLOWED_ORIGINS="https://a.com,https://b.com"
+    allowed_origins: list[str] = ["*"]
+
     log_level: str = "INFO"
 
 

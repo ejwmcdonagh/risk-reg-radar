@@ -7,7 +7,11 @@ than waiting for the scheduler, which is useful when testing a new ingester
 or recovering from a failed scheduled run.
 """
 
+import logging
+
 from fastapi import APIRouter, HTTPException
+
+logger = logging.getLogger(__name__)
 
 from app.db.client import get_db
 from app.ingestion.bleeping_computer import BleepingComputerIngester
@@ -67,7 +71,9 @@ async def trigger_ingestion(source: SignalSource):
     try:
         inserted = await ingester.run()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        # Log full exception server-side; don't expose internal detail to the caller
+        logger.exception("Ingestion run failed for source %s", source)
+        raise HTTPException(status_code=500, detail="Ingestion run failed") from exc
     return {"source": source, "inserted": inserted}
 
 

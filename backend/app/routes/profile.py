@@ -67,18 +67,10 @@ async def toggle_builtin_source(source_id: str):
     if not any(s["id"] == source_id for s in BUILTIN_SOURCES):
         raise HTTPException(status_code=404, detail="Unknown source")
     db = get_db()
-    result = db.table("org_profile").select("disabled_sources").eq("id", 1).single().execute()
-    disabled: list[str] = result.data.get("disabled_sources", []) if result.data else []
-    if source_id in disabled:
-        disabled = [s for s in disabled if s != source_id]
-        enabled = True
-    else:
-        disabled = [*disabled, source_id]
-        enabled = False
-    db.table("org_profile").update({
-        "disabled_sources": disabled,
-        "updated_at": datetime.now(UTC).isoformat(),
-    }).eq("id", 1).execute()
+    # Use the SQL function instead of read-modify-write to avoid a race condition
+    # where two concurrent toggles on the same source lose one update.
+    result = db.rpc("toggle_disabled_source", {"p_source_id": source_id}).execute()
+    enabled: bool = result.data
     return {"id": source_id, "enabled": enabled}
 
 
@@ -114,7 +106,7 @@ async def add_source(body: CustomSourceCreate):
             "url": str(body.url),
         }).execute()
     except Exception as exc:
-        # Unique constraint violation - URL already exists
+        # Unique constraint on url column - surface a clean message, not the DB error
         raise HTTPException(status_code=409, detail="A source with that URL already exists") from exc
     return result.data[0]
 
