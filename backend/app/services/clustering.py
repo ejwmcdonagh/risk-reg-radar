@@ -333,7 +333,7 @@ async def run_clustering() -> int:
         len(all_signals), len(RiskDomain), settings.clustering_window_days,
     )
 
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
     total_written = 0
 
     for domain in _DOMAIN_ORDER:
@@ -433,7 +433,7 @@ async def _cluster_batch(
     ]
 
     try:
-        response = client.messages.create(
+        response = await client.messages.create(
             model="claude-haiku-4-5-20251001",
             # temperature=0 makes clustering deterministic - same signals produce the
             # same clusters on every run, preventing variance between daily runs

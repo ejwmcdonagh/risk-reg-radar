@@ -158,7 +158,7 @@ async def generate_cards(cluster_ids: list[str] | None = None) -> int:
         return 0
 
     logger.info("Generating cards for %d clusters", len(clusters))
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
     written = 0
 
     for cluster in clusters:
@@ -253,7 +253,7 @@ async def _generate_one(db: Any, client: anthropic.Anthropic, cluster: dict[str,
         + reg_context
     )
 
-    response = client.messages.create(
+    response = await client.messages.create(
         # To switch to Opus, replace the model string and uncomment the thinking line.
         # Thinking is not supported on Haiku - only uncomment it when using Opus.
         model="claude-haiku-4-5-20251001",

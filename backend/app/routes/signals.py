@@ -39,22 +39,15 @@ async def list_signals(
 @router.get("/stats")
 async def signal_stats():
     """
-    Counts grouped by source and risk domain - used by the dashboard to
-    populate domain swim-lane headers before card data is loaded.
+    Counts grouped by source and risk domain.
+
+    Uses a SQL function rather than loading all rows into Python - the
+    risk_domains TEXT[] column requires unnest() to group by individual
+    domain values, which isn't expressible via the PostgREST filter API.
     """
     db = get_db()
-    result = db.table("signals").select("source, risk_domains").execute()
-
-    source_counts: dict[str, int] = {}
-    domain_counts: dict[str, int] = {}
-
-    for row in result.data:
-        src = row["source"]
-        source_counts[src] = source_counts.get(src, 0) + 1
-        for domain in row.get("risk_domains", []):
-            domain_counts[domain] = domain_counts.get(domain, 0) + 1
-
-    return {"by_source": source_counts, "by_domain": domain_counts}
+    result = db.rpc("get_signal_stats", {}).execute()
+    return result.data
 
 
 @router.get("/{signal_id}")

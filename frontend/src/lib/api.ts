@@ -1,4 +1,18 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
+
+// Centralises header injection so every request automatically carries the API
+// key when one is configured. When NEXT_PUBLIC_API_KEY is not set, requests
+// are sent without the header and the backend bypasses auth entirely.
+function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...(API_KEY ? { "X-Api-Key": API_KEY } : {}),
+      ...(init.headers ?? {}),
+    },
+  });
+}
 
 export type EvidenceItem = {
   source: string;
@@ -80,30 +94,31 @@ export type BuiltinSource = {
   enabled: boolean;
 };
 
-export async function fetchCards(): Promise<ProvocationCard[]> {
-  const res = await fetch(`${API_BASE}/api/cards?limit=100`, {
-    cache: "no-store",
-  });
+export async function fetchCards(limit = 50, offset = 0): Promise<ProvocationCard[]> {
+  const res = await apiFetch(
+    `${API_BASE}/api/cards?limit=${limit}&offset=${offset}`,
+    { cache: "no-store" },
+  );
   if (!res.ok) throw new Error(`Failed to fetch cards: ${res.status}`);
   const data = await res.json();
   return data.cards ?? [];
 }
 
 export async function fetchProfile(): Promise<OrgProfile> {
-  const res = await fetch(`${API_BASE}/api/profile`, { cache: "no-store" });
+  const res = await apiFetch(`${API_BASE}/api/profile`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch profile: ${res.status}`);
   return res.json();
 }
 
 export async function fetchSources(): Promise<CustomSource[]> {
-  const res = await fetch(`${API_BASE}/api/profile/sources`, { cache: "no-store" });
+  const res = await apiFetch(`${API_BASE}/api/profile/sources`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch sources: ${res.status}`);
   const data = await res.json();
   return data.sources ?? [];
 }
 
 export async function fetchBuiltinSources(): Promise<BuiltinSource[]> {
-  const res = await fetch(`${API_BASE}/api/profile/sources/builtin`, { cache: "no-store" });
+  const res = await apiFetch(`${API_BASE}/api/profile/sources/builtin`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch builtin sources: ${res.status}`);
   const data = await res.json();
   return data.sources ?? [];
@@ -112,19 +127,19 @@ export async function fetchBuiltinSources(): Promise<BuiltinSource[]> {
 export async function fetchArchivedCards(before?: string): Promise<ProvocationCard[]> {
   const params = new URLSearchParams({ status: "archived", limit: "200" });
   if (before) params.set("before", before);
-  const res = await fetch(`${API_BASE}/api/cards?${params}`, { cache: "no-store" });
+  const res = await apiFetch(`${API_BASE}/api/cards?${params}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch archived cards: ${res.status}`);
   const data = await res.json();
   return data.cards ?? [];
 }
 
 export async function dismissCard(cardId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/cards/${cardId}/dismiss`, { method: "POST" });
+  const res = await apiFetch(`${API_BASE}/api/cards/${cardId}/dismiss`, { method: "POST" });
   if (!res.ok) throw new Error(`Failed to dismiss card: ${res.status}`);
 }
 
 export async function fetchTeamSummary(cardId: string, team: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/cards/${cardId}/team-summary`, {
+  const res = await apiFetch(`${API_BASE}/api/cards/${cardId}/team-summary`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ team }),

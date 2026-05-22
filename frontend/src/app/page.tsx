@@ -10,7 +10,7 @@ export default async function Home() {
   let blockedTechnologies: string[] = [];
 
   try {
-    const [fetchedCards, profile] = await Promise.all([fetchCards(), fetchProfile()]);
+    const [fetchedCards, profile] = await Promise.all([fetchCards(50, 0), fetchProfile()]);
     cards = fetchedCards;
     technologies = profile.technologies;
     blockedTechnologies = profile.blocked_technologies ?? [];

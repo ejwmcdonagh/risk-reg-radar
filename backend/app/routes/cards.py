@@ -1,10 +1,9 @@
 import logging
+from datetime import UTC, datetime
 from typing import Annotated
 
 import anthropic
-from fastapi import APIRouter, HTTPException, Query
-
-logger = logging.getLogger(__name__)
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel
 
 from app.config import settings
@@ -12,25 +11,46 @@ from app.db.client import get_db
 from app.models.enums import RiskDomain
 from app.services.card_generator import generate_cards
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/cards", tags=["cards"])
 
 
 @router.post("/run")
-async def trigger_card_generation(cluster_ids: list[str] | None = None):
+async def trigger_card_generation(
+    background_tasks: BackgroundTasks,
+    cluster_ids: list[str] | None = None,
+):
     """
     Manually trigger card generation.
 
-    Without a body: generates cards for all pending clusters above the score threshold.
-    With cluster_ids in the JSON body: generates cards for only those specific clusters,
-    useful for targeted re-generation after prompt tuning.
+    Returns immediately with a job_id. Poll GET /api/pipeline/runs/{job_id}
+    for status and result. Pass cluster_ids in the JSON body to regenerate
+    specific clusters only (useful after prompt tuning).
     """
+    db = get_db()
+    run = db.table("pipeline_runs").insert({"type": "card_generation"}).execute().data[0]
+    background_tasks.add_task(_run_card_generation_job, run["id"], cluster_ids)
+    return {"job_id": run["id"], "status": "running"}
+
+
+async def _run_card_generation_job(run_id: str, cluster_ids: list[str] | None) -> None:
+    db = get_db()
     try:
         written = await generate_cards(cluster_ids=cluster_ids)
-    except Exception as exc:
-        # Log full exception server-side; don't expose internal detail to the caller
-        logger.exception("Card generation run failed")
-        raise HTTPException(status_code=500, detail="Card generation failed") from exc
-    return {"cards_written": written}
+        db.table("pipeline_runs").update({
+            "status": "completed",
+            "completed_at": datetime.now(UTC).isoformat(),
+            "result": {"cards_written": written},
+        }).eq("id", run_id).execute()
+        logger.info("Card generation job %s complete: %d cards written", run_id, written)
+    except Exception:
+        logger.exception("Card generation background job %s failed", run_id)
+        db.table("pipeline_runs").update({
+            "status": "failed",
+            "completed_at": datetime.now(UTC).isoformat(),
+            "error": "Job failed - see server logs",
+        }).eq("id", run_id).execute()
 
 
 @router.get("")

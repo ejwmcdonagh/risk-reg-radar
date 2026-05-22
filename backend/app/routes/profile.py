@@ -1,4 +1,7 @@
+import ipaddress
+import socket
 from datetime import UTC, datetime
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
@@ -97,8 +100,26 @@ async def list_sources():
     return {"sources": result.data}
 
 
+def _reject_private_url(url: str) -> None:
+    """
+    Reject URLs that resolve to private/loopback/link-local IPs.
+    Prevents SSRF where a user submits an internal network address as an RSS
+    feed and the ingester fetches it (e.g. AWS metadata at 169.254.169.254).
+    """
+    hostname = urlparse(url).hostname or ""
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise HTTPException(status_code=422, detail="Could not resolve hostname")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            raise HTTPException(status_code=422, detail="URL resolves to a private address")
+
+
 @router.post("/sources")
 async def add_source(body: CustomSourceCreate):
+    _reject_private_url(str(body.url))
     db = get_db()
     try:
         result = db.table("custom_sources").insert({

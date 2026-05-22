@@ -1,26 +1,49 @@
+import logging
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.db.client import get_db
 from app.models.enums import RiskDomain
 from app.services.clustering import run_clustering
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/clusters", tags=["clusters"])
 
 
 @router.post("/run")
-async def trigger_clustering():
+async def trigger_clustering(background_tasks: BackgroundTasks):
     """
     Manually trigger the signal clustering job.
-    Useful during development and for ops-driven re-runs after ingestion.
-    Returns the number of new clusters written.
+
+    Returns immediately with a job_id. Poll GET /api/pipeline/runs/{job_id}
+    for status and result. This prevents HTTP timeouts on large signal sets.
     """
+    db = get_db()
+    run = db.table("pipeline_runs").insert({"type": "clustering"}).execute().data[0]
+    background_tasks.add_task(_run_clustering_job, run["id"])
+    return {"job_id": run["id"], "status": "running"}
+
+
+async def _run_clustering_job(run_id: str) -> None:
+    db = get_db()
     try:
         written = await run_clustering()
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return {"clusters_written": written}
+        db.table("pipeline_runs").update({
+            "status": "completed",
+            "completed_at": datetime.now(UTC).isoformat(),
+            "result": {"clusters_written": written},
+        }).eq("id", run_id).execute()
+        logger.info("Clustering job %s complete: %d clusters written", run_id, written)
+    except Exception:
+        logger.exception("Clustering background job %s failed", run_id)
+        db.table("pipeline_runs").update({
+            "status": "failed",
+            "completed_at": datetime.now(UTC).isoformat(),
+            "error": "Job failed - see server logs",
+        }).eq("id", run_id).execute()
 
 
 @router.get("")

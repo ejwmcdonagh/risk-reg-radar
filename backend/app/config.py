@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     ncsc_cron: str = "0 */6 * * *"
     nvd_cron: str = "0 7 * * *"
 
+    # Optional API key for protecting the API. When empty, auth is disabled.
+    # Set to any secret string in production: API_KEY=your-secret-here
+    api_key: str = ""
+
     # Set to true in production to enable the daily pipeline schedule.
     # Off by default so local dev runs stay fully manual.
     scheduler_enabled: bool = False

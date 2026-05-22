@@ -10,7 +10,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import truststore
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 # Inject the OS native trust store (macOS Keychain) into Python's ssl module.
 # Required on corporate networks where a proxy CA is trusted by the system
@@ -18,9 +18,10 @@ from fastapi import FastAPI
 truststore.inject_into_ssl()
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth import require_api_key
 from app.config import settings
 from app.db.client import get_db
-from app.routes import cards, clusters, ingestion, profile, signals
+from app.routes import cards, clusters, ingestion, pipeline, profile, signals
 from app.scheduler import create_scheduler
 
 logging.basicConfig(level=settings.log_level)
@@ -47,6 +48,8 @@ app = FastAPI(
     description="Signal ingestion and retrieval for the Regulatory Radar intelligence agent.",
     version="0.1.0",
     lifespan=lifespan,
+    # Global auth dependency - no-op when API_KEY env var is not set
+    dependencies=[Depends(require_api_key)],
 )
 
 # In production, set ALLOWED_ORIGINS="https://your-domain.com" in the env.
@@ -63,6 +66,7 @@ app.include_router(ingestion.router)
 app.include_router(clusters.router)
 app.include_router(cards.router)
 app.include_router(profile.router)
+app.include_router(pipeline.router)
 
 
 @app.get("/health")
