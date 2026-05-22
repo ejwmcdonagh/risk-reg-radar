@@ -42,10 +42,10 @@ export default async function SettingsPage() {
 
         <div className="border-t border-zinc-200" />
 
-        {/* Blocked technologies */}
+        {/* Hidden technologies */}
         <section>
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-zinc-900">Blocked technologies</h2>
+            <h2 className="text-base font-semibold text-zinc-900">Hidden technologies</h2>
             <p className="text-sm text-zinc-500 mt-1">
               Add technologies your organisation does not use. Cards that mention these will be
               hidden from the board entirely.

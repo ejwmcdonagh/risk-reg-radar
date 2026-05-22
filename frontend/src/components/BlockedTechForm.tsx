@@ -62,7 +62,7 @@ export default function BlockedTechForm({
       </div>
 
       {blocked.length === 0 ? (
-        <p className="text-sm text-zinc-400">No technologies blocked yet.</p>
+        <p className="text-sm text-zinc-400">No technologies hidden yet.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {blocked.map((tech) => (
