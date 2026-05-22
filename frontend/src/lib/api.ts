@@ -61,6 +61,7 @@ export const DOMAINS: RiskDomain[] = [
 export type OrgProfile = {
   id: number;
   technologies: string[];
+  blocked_technologies: string[];
   updated_at: string;
 };
 

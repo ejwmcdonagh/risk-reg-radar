@@ -10,9 +10,10 @@ type Props = {
   cards: ProvocationCard[];
   domains: RiskDomain[];
   technologies: string[];
+  blockedTechnologies: string[];
 };
 
-export default function Dashboard({ cards: initialCards, domains, technologies }: Props) {
+export default function Dashboard({ cards: initialCards, domains, technologies, blockedTechnologies }: Props) {
   const [cards, setCards] = useState(initialCards);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
@@ -21,7 +22,18 @@ export default function Dashboard({ cards: initialCards, domains, technologies }
     setCards((prev) => prev.filter((c) => c.id !== id));
   }
 
-  let visibleCards = cards;
+  // Hide cards that mention any blocked technology
+  const isBlocked = (card: ProvocationCard) => {
+    if (blockedTechnologies.length === 0) return false;
+    const haystack = [
+      card.signal_headline,
+      card.metadata.cluster_summary,
+      ...card.evidence_stack.map((e) => `${e.title} ${e.point}`),
+    ].join(" ").toLowerCase();
+    return blockedTechnologies.some((t) => haystack.includes(t.toLowerCase()));
+  };
+
+  let visibleCards = cards.filter((c) => !isBlocked(c));
 
   if (selectedTeam) {
     visibleCards = visibleCards.filter((c) => c.affected_teams?.includes(selectedTeam));

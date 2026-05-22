@@ -1,5 +1,6 @@
 import { fetchProfile, fetchSources, fetchBuiltinSources } from "@/lib/api";
 import TechProfileForm from "@/components/TechProfileForm";
+import BlockedTechForm from "@/components/BlockedTechForm";
 import BuiltinSourcesForm from "@/components/BuiltinSourcesForm";
 import CustomSourcesForm from "@/components/CustomSourcesForm";
 import Link from "next/link";
@@ -37,6 +38,23 @@ export default async function SettingsPage() {
             </p>
           </div>
           <TechProfileForm initialTechnologies={profile.technologies} />
+        </section>
+
+        <div className="border-t border-zinc-200" />
+
+        {/* Blocked technologies */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-zinc-900">Blocked technologies</h2>
+            <p className="text-sm text-zinc-500 mt-1">
+              Add technologies your organisation does not use. Cards that mention these will be
+              hidden from the board entirely.
+            </p>
+          </div>
+          <BlockedTechForm
+            initialTechnologies={profile.technologies}
+            initialBlocked={profile.blocked_technologies ?? []}
+          />
         </section>
 
         <div className="border-t border-zinc-200" />

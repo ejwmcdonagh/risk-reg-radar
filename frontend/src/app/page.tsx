@@ -7,8 +7,13 @@ export default async function Home() {
   let technologies: string[] = [];
   let error: string | null = null;
 
+  let blockedTechnologies: string[] = [];
+
   try {
-    [cards, { technologies }] = await Promise.all([fetchCards(), fetchProfile()]);
+    const [fetchedCards, profile] = await Promise.all([fetchCards(), fetchProfile()]);
+    cards = fetchedCards;
+    technologies = profile.technologies;
+    blockedTechnologies = profile.blocked_technologies ?? [];
   } catch (e) {
     error = e instanceof Error ? e.message : "Failed to load cards";
   }
@@ -65,7 +70,7 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          <Dashboard cards={cards} domains={DOMAINS} technologies={technologies} />
+          <Dashboard cards={cards} domains={DOMAINS} technologies={technologies} blockedTechnologies={blockedTechnologies} />
         )}
       </main>
     </div>

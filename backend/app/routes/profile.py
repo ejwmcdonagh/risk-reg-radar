@@ -31,6 +31,7 @@ BUILTIN_SOURCES = [
 
 class ProfileUpdate(BaseModel):
     technologies: list[str]
+    blocked_technologies: list[str] = []
 
 
 class CustomSourceCreate(BaseModel):
@@ -85,12 +86,14 @@ async def toggle_builtin_source(source_id: str):
 async def update_profile(body: ProfileUpdate):
     # Normalise: strip whitespace, deduplicate, sort for stable storage
     technologies = sorted(set(t.strip() for t in body.technologies if t.strip()))
+    blocked = sorted(set(t.strip() for t in body.blocked_technologies if t.strip()))
     db = get_db()
     db.table("org_profile").update({
         "technologies": technologies,
+        "blocked_technologies": blocked,
         "updated_at": datetime.now(UTC).isoformat(),
     }).eq("id", 1).execute()
-    return {"technologies": technologies}
+    return {"technologies": technologies, "blocked_technologies": blocked}
 
 
 # ── Custom sources ────────────────────────────────────────────────────────────
